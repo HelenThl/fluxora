@@ -1,0 +1,60 @@
+%% Fluxora pipeline. Render: npx -y @mermaid-js/mermaid-cli@11.4.2 -i docs/architecture.mmd -o docs/architecture.svg
+flowchart LR
+    subgraph IN["Power App export (synthetic)"]
+        APP["app.pa.yaml<br/>Power Fx"]
+        FLOW["flow.json<br/>Power Automate"]
+        SCHEMA["dataverse-schema.json"]
+    end
+
+    subgraph T["TRANSFORM"]
+        EXT["Extractor<br/>code parses rules"]
+        EXTLLM(["LLM: rule sentence<br/>+ confidence"])
+        REG[("Rule register<br/>rules.json · 11 rules<br/>2 unsupported")]
+    end
+
+    GATE{{"HUMAN GATE<br/>approve / reject<br/>(dashboard or CLI)"}}
+
+    subgraph R["REBUILD"]
+        GEN["Generator<br/>templates · Evaluator<br/>precedence"]
+        GENLLM(["LLM: one method<br/>body per rule"])
+        APPOUT["Migrated app<br/>.NET 8 API · Rules/R01–R11<br/>Cosmos DB model · React form"]
+    end
+
+    subgraph V["VERIFY"]
+        CASES[("Reference cases (32)<br/>hash-guarded")]
+        ORACLE["Oracle<br/>Power Fx engine<br/>32/32 confirmed"]
+        JUDGE["Judge / Parity Court<br/>run API · compare<br/>field by field"]
+        REPAIR["Repair loop<br/>max 3 · Rules/ only"]
+        REPLLM(["LLM: patch for<br/>one rule file"])
+    end
+
+    EVID["Evidence<br/>parity.json · repairs.json<br/>evidence.md"]
+    DASH["Dashboard<br/>Transform · Rebuild · Verify"]
+
+    APP --> EXT
+    FLOW --> EXT
+    SCHEMA --> EXT
+    EXT --> REG
+    EXTLLM -. wording only .-> REG
+    REG --> GATE
+    GATE -- approved rules only --> GEN
+    GENLLM -. method bodies .-> GEN
+    GEN --> APPOUT
+    ORACLE -- confirms --> CASES
+    APPOUT --> JUDGE
+    CASES --> JUDGE
+    JUDGE -- mismatch --> REPAIR
+    REPLLM -. patch .-> REPAIR
+    REPAIR -- rebuild, re-judge --> JUDGE
+    JUDGE --> EVID
+    EVID --> DASH
+    REG --> DASH
+
+    classDef llm fill:#fff4d6,stroke:#b7791f,color:#5f370e
+    classDef nollm fill:#e8f1fb,stroke:#2b6cb0,color:#1a365d
+    classDef human fill:#e6f6ec,stroke:#2f855a,color:#1c4532,stroke-width:3px
+    classDef data fill:#f4f4f5,stroke:#71717a,color:#27272a
+    class EXTLLM,GENLLM,REPLLM llm
+    class EXT,GEN,JUDGE,REPAIR,ORACLE,APPOUT,EVID,DASH nollm
+    class GATE human
+    class REG,CASES,APP,FLOW,SCHEMA data

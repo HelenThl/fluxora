@@ -129,8 +129,8 @@ It runs the whole pipeline in six timed stages:
 6. **Evidence.** `runs/<run-id>/evidence.md` is written.
 
 It ends with a table of measured wall-clock times. Each row says whether the LLM answered live, from
-the cache, or by replay. Here is one measured run, offline with the cached LLM on a Windows laptop
-(2026-11-08):
+the cache, or by replay. Here is one measured run, offline with the cached LLM on a Windows 11
+machine (2026-11-08). See [docs/measurements.md](docs/measurements.md) for six runs:
 
 | Stage | Seconds | Mode |
 |---|---|---|
@@ -273,6 +273,19 @@ stage that uses them is labelled "cached LLM" or "replay", never "live".
 **To use a live model:** set `.env`. Cache keys include the model name, so a different model makes
 real calls, caches its answers next to the committed ones, and is labelled "live LLM". With more than
 one model in the cache, set `LLM_MODEL` for offline runs.
+
+## Submission documents
+
+- [docs/architecture.mmd](docs/architecture.mmd): the pipeline as a Mermaid diagram, showing where
+  an LLM is called and the human gate. To render it:
+  `npx -y @mermaid-js/mermaid-cli@11.4.2 -i docs/architecture.mmd -o docs/architecture.svg`
+- [docs/responsible-ai.md](docs/responsible-ai.md): data, privacy, oversight, safeguards, fairness,
+  limitations, and what FCA and GDPR would still require.
+- [docs/measurements.md](docs/measurements.md): measured demo timings, taken from real `evidence.md`
+  files.
+- [docs/demo-script.md](docs/demo-script.md): the 2:45 video script and pre-recording checklist.
+- [docs/deck-outline.md](docs/deck-outline.md): the 10-slide deck outline.
+- [AI_USAGE.md](AI_USAGE.md): AI used to build Fluxora, and the LLM calls Fluxora makes at runtime.
 
 ## Repository layout
 

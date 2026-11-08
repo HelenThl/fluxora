@@ -26,3 +26,6 @@ runs/*/work/
 runs/*
 !runs/.gitkeep
 !runs/20261108-143433/
+# The demo run quoted by the submission docs (its generated/ is byte-identical to generated/)
+!runs/20261108-160920/
+runs/20261108-160920/generated/

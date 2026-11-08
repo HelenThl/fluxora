@@ -1,0 +1,270 @@
+{
+  "runId": "20261108-160920",
+  "createdAt": "2026-11-08T16:09:20Z",
+  "fixture": "fixtures/claim-triage",
+  "ruleTextModel": "claude-code:claude-opus-5-5",
+  "rules": [
+    {
+      "id": "R01",
+      "source": {
+        "file": "app.pa.yaml",
+        "ref": "App.Formulas.AmountInvalid"
+      },
+      "formula": "IsBlank(ClaimAmount) || ClaimAmount <= 0",
+      "rule": "A claim cannot be submitted if the claim amount is missing, zero or negative; the form shows 'Amount must be greater than zero'.",
+      "inputs": [
+        "ClaimAmount"
+      ],
+      "output": "Errors",
+      "confidence": "high",
+      "status": "approved"
+    },
+    {
+      "id": "R02",
+      "source": {
+        "file": "app.pa.yaml",
+        "ref": "App.Formulas.ClaimTypeInvalid"
+      },
+      "formula": "Not(ClaimType in [\"Motor\",\"Home\",\"Travel\"])",
+      "rule": "A claim cannot be submitted unless its claim type is Motor, Home or Travel.",
+      "inputs": [
+        "ClaimType"
+      ],
+      "output": "Errors",
+      "confidence": "high",
+      "status": "approved"
+    },
+    {
+      "id": "R03",
+      "source": {
+        "file": "app.pa.yaml",
+        "ref": "App.Formulas.IncidentInFuture"
+      },
+      "formula": "IncidentDate > Today()",
+      "rule": "A claim cannot be submitted if the incident date is later than today.",
+      "inputs": [
+        "IncidentDate"
+      ],
+      "output": "Errors",
+      "confidence": "high",
+      "status": "approved"
+    },
+    {
+      "id": "R04",
+      "source": {
+        "file": "app.pa.yaml",
+        "ref": "App.Formulas.NotCovered"
+      },
+      "formula": "IncidentDate < PolicyStartDate",
+      "rule": "If the incident happened before the policy start date, the claim's status is set to Not covered.",
+      "inputs": [
+        "IncidentDate",
+        "PolicyStartDate"
+      ],
+      "output": "Status",
+      "confidence": "high",
+      "status": "approved"
+    },
+    {
+      "id": "R05",
+      "source": {
+        "file": "app.pa.yaml",
+        "ref": "App.Formulas.Excess"
+      },
+      "formula": "Switch(ClaimType,\"Motor\",250,\"Home\",350,\"Travel\",100)",
+      "rule": "The excess is £250 for Motor claims, £350 for Home claims and £100 for Travel claims.",
+      "inputs": [
+        "ClaimType"
+      ],
+      "output": "Excess",
+      "confidence": "high",
+      "status": "approved"
+    },
+    {
+      "id": "R06",
+      "source": {
+        "file": "app.pa.yaml",
+        "ref": "App.Formulas.Payable"
+      },
+      "formula": "Max(0, ClaimAmount - Excess)",
+      "rule": "The payable amount is the claim amount minus the excess, and never less than £0.",
+      "inputs": [
+        "ClaimAmount",
+        "Excess"
+      ],
+      "output": "Payable",
+      "confidence": "high",
+      "status": "approved"
+    },
+    {
+      "id": "R07",
+      "source": {
+        "file": "app.pa.yaml",
+        "ref": "App.Formulas.BelowExcess"
+      },
+      "formula": "Payable = 0",
+      "rule": "If the payable amount is £0, the claim's status is set to Below excess.",
+      "inputs": [
+        "Payable"
+      ],
+      "output": "Status",
+      "confidence": "high",
+      "status": "approved"
+    },
+    {
+      "id": "R08",
+      "source": {
+        "file": "app.pa.yaml",
+        "ref": "App.Formulas.ReceiptMissing"
+      },
+      "formula": "ClaimType = \"Travel\" && ClaimAmount > 2000 && !HasReceipt",
+      "rule": "A Travel claim over £2,000 cannot be submitted without a receipt.",
+      "inputs": [
+        "ClaimType",
+        "ClaimAmount",
+        "HasReceipt"
+      ],
+      "output": "Errors",
+      "confidence": "high",
+      "status": "approved"
+    },
+    {
+      "id": "R09",
+      "source": {
+        "file": "flow.json",
+        "ref": "actions.Condition_LateReport.else.actions.Condition_Amount"
+      },
+      "formula": "ClaimAmount > 5000",
+      "rule": "If the claim amount is over £5,000, the claim's status is set to Pending approval.",
+      "inputs": [
+        "ClaimAmount"
+      ],
+      "output": "Status",
+      "confidence": "high",
+      "status": "approved"
+    },
+    {
+      "id": "R10",
+      "source": {
+        "file": "flow.json",
+        "ref": "actions.Condition_LateReport"
+      },
+      "formula": "div(sub(ticks(ReportedDate), ticks(IncidentDate)), 864000000000) > 30",
+      "rule": "If the claim is reported more than 30 days after the incident, it is flagged as a late report and its status is set to Manual review.",
+      "inputs": [
+        "ReportedDate",
+        "IncidentDate"
+      ],
+      "output": "LateReport, Status",
+      "confidence": "medium",
+      "status": "approved"
+    },
+    {
+      "id": "R11",
+      "source": {
+        "file": "flow.json",
+        "ref": "actions.Condition_LateReport.else.actions.Condition_Amount.else.actions.Set_Status_Approved"
+      },
+      "formula": "otherwise",
+      "rule": "If none of the flow's earlier checks apply, the claim's status is set to Approved.",
+      "inputs": [],
+      "output": "Status",
+      "confidence": "high",
+      "status": "approved"
+    }
+  ],
+  "precedence": [
+    [
+      "R01",
+      "R02",
+      "R03",
+      "R08"
+    ],
+    [
+      "R04"
+    ],
+    [
+      "R07"
+    ],
+    [
+      "R10"
+    ],
+    [
+      "R09"
+    ],
+    [
+      "R11"
+    ]
+  ],
+  "unsupported": [
+    {
+      "file": "app.pa.yaml",
+      "ref": "ClaimScreen.btnSubmit.OnSelect",
+      "construct": "Notify(...)",
+      "reason": "Shows a toast message inside the Power App. It does not change any claim field the rules compute; the migrated form shows the status returned by the API instead."
+    },
+    {
+      "file": "flow.json",
+      "ref": "actions.Condition_LateReport.else.actions.Condition_Amount.actions.Send_an_email",
+      "construct": "Send_an_email",
+      "reason": "Outbound connector call (shared_office365: SendEmailV2). The migrated API has no mail or connector integration, and the call does not change any claim field the rules compute."
+    }
+  ],
+  "approvals": [
+    {
+      "ruleId": "R01",
+      "decision": "approved",
+      "at": "2026-11-08T16:09:20Z"
+    },
+    {
+      "ruleId": "R02",
+      "decision": "approved",
+      "at": "2026-11-08T16:09:20Z"
+    },
+    {
+      "ruleId": "R03",
+      "decision": "approved",
+      "at": "2026-11-08T16:09:20Z"
+    },
+    {
+      "ruleId": "R04",
+      "decision": "approved",
+      "at": "2026-11-08T16:09:20Z"
+    },
+    {
+      "ruleId": "R05",
+      "decision": "approved",
+      "at": "2026-11-08T16:09:20Z"
+    },
+    {
+      "ruleId": "R06",
+      "decision": "approved",
+      "at": "2026-11-08T16:09:20Z"
+    },
+    {
+      "ruleId": "R07",
+      "decision": "approved",
+      "at": "2026-11-08T16:09:20Z"
+    },
+    {
+      "ruleId": "R08",
+      "decision": "approved",
+      "at": "2026-11-08T16:09:20Z"
+    },
+    {
+      "ruleId": "R09",
+      "decision": "approved",
+      "at": "2026-11-08T16:09:20Z"
+    },
+    {
+      "ruleId": "R10",
+      "decision": "approved",
+      "at": "2026-11-08T16:09:20Z"
+    },
+    {
+      "ruleId": "R11",
+      "decision": "approved",
+      "at": "2026-11-08T16:09:20Z"
+    }
+  ]
+}
