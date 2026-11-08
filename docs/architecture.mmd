@@ -1,60 +1,51 @@
+%%{init: {"flowchart": {"nodeSpacing": 28, "rankSpacing": 38, "padding": 8}}}%%
 %% Fluxora pipeline. Render: npx -y @mermaid-js/mermaid-cli@11.4.2 -i docs/architecture.mmd -o docs/architecture.svg
+%% (Windows PowerShell with scripts disabled: use npx.cmd instead of npx.)
 flowchart LR
-    subgraph IN["Power App export (synthetic)"]
-        APP["app.pa.yaml<br/>Power Fx"]
-        FLOW["flow.json<br/>Power Automate"]
-        SCHEMA["dataverse-schema.json"]
-    end
+    IN["Power App export<br/>(synthetic)<br/>app.pa.yaml · flow.json<br/>dataverse-schema.json"]
 
     subgraph T["TRANSFORM"]
         EXT["Extractor<br/>code parses rules"]
         EXTLLM(["LLM: rule sentence<br/>+ confidence"])
-        REG[("Rule register<br/>rules.json · 11 rules<br/>2 unsupported")]
+        REG[("Rule register<br/>11 rules · 2 unsupported")]
     end
 
-    GATE{{"HUMAN GATE<br/>approve / reject<br/>(dashboard or CLI)"}}
+    GATE{{"HUMAN GATE<br/>approve / reject"}}
 
     subgraph R["REBUILD"]
-        GEN["Generator<br/>templates · Evaluator<br/>precedence"]
+        GEN["Generator<br/>templates · precedence"]
         GENLLM(["LLM: one method<br/>body per rule"])
-        APPOUT["Migrated app<br/>.NET 8 API · Rules/R01–R11<br/>Cosmos DB model · React form"]
+        APPOUT["Migrated app<br/>.NET 8 API · Rules/R01–R11<br/>Cosmos model · React form"]
     end
 
     subgraph V["VERIFY"]
-        CASES[("Reference cases (32)<br/>hash-guarded")]
-        ORACLE["Oracle<br/>Power Fx engine<br/>32/32 confirmed"]
-        JUDGE["Judge / Parity Court<br/>run API · compare<br/>field by field"]
+        CASES[("Reference cases (32)<br/>confirmed by Power Fx engine<br/>hash-guarded")]
+        JUDGE["Parity Court<br/>run API · compare<br/>field by field"]
         REPAIR["Repair loop<br/>max 3 · Rules/ only"]
         REPLLM(["LLM: patch for<br/>one rule file"])
     end
 
-    EVID["Evidence<br/>parity.json · repairs.json<br/>evidence.md"]
-    DASH["Dashboard<br/>Transform · Rebuild · Verify"]
+    OUT["Evidence + dashboard<br/>parity · repairs · evidence.md<br/>Transform · Rebuild · Verify"]
 
-    APP --> EXT
-    FLOW --> EXT
-    SCHEMA --> EXT
+    IN --> EXT
     EXT --> REG
     EXTLLM -. wording only .-> REG
     REG --> GATE
-    GATE -- approved rules only --> GEN
-    GENLLM -. method bodies .-> GEN
+    GATE -- approved only --> GEN
+    GENLLM -. bodies .-> GEN
     GEN --> APPOUT
-    ORACLE -- confirms --> CASES
     APPOUT --> JUDGE
     CASES --> JUDGE
     JUDGE -- mismatch --> REPAIR
     REPLLM -. patch .-> REPAIR
-    REPAIR -- rebuild, re-judge --> JUDGE
-    JUDGE --> EVID
-    EVID --> DASH
-    REG --> DASH
+    REPAIR -- re-judge --> JUDGE
+    JUDGE --> OUT
 
     classDef llm fill:#fff4d6,stroke:#b7791f,color:#5f370e
     classDef nollm fill:#e8f1fb,stroke:#2b6cb0,color:#1a365d
     classDef human fill:#e6f6ec,stroke:#2f855a,color:#1c4532,stroke-width:3px
     classDef data fill:#f4f4f5,stroke:#71717a,color:#27272a
     class EXTLLM,GENLLM,REPLLM llm
-    class EXT,GEN,JUDGE,REPAIR,ORACLE,APPOUT,EVID,DASH nollm
+    class EXT,GEN,JUDGE,REPAIR,APPOUT,OUT nollm
     class GATE human
-    class REG,CASES,APP,FLOW,SCHEMA data
+    class REG,CASES,IN data

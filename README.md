@@ -276,9 +276,11 @@ one model in the cache, set `LLM_MODEL` for offline runs.
 
 ## Submission documents
 
-- [docs/architecture.mmd](docs/architecture.mmd): the pipeline as a Mermaid diagram, showing where
-  an LLM is called and the human gate. To render it:
+- [docs/architecture.svg](docs/architecture.svg), rendered from
+  [docs/architecture.mmd](docs/architecture.mmd): the pipeline, showing where an LLM is called and the
+  human gate. To re-render it, from this folder:
   `npx -y @mermaid-js/mermaid-cli@11.4.2 -i docs/architecture.mmd -o docs/architecture.svg`
+  (on Windows PowerShell with scripts disabled, use `npx.cmd` instead of `npx`).
 - [docs/responsible-ai.md](docs/responsible-ai.md): data, privacy, oversight, safeguards, fairness,
   limitations, and what FCA and GDPR would still require.
 - [docs/measurements.md](docs/measurements.md): measured demo timings, taken from real `evidence.md`
