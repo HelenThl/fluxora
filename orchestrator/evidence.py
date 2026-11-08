@@ -22,19 +22,31 @@ def load_run(run_dir: Path, root: Path = ROOT) -> dict:
         raise FileNotFoundError(f"No rules.json in {run_dir}")
     parity = _load(run_dir / "parity.json")
     repairs = _load(run_dir / "repairs.json")
-    manifest = _load(root / "generated" / "manifest.json")
+    generated_dir = generated_dir_for(run_dir, root)
+    manifest = _load(generated_dir / "manifest.json")
     if manifest and manifest.get("generatedFrom", {}).get("runId") != rules.get("runId"):
         manifest = manifest | {"note": f"generated/ was built from run {manifest['generatedFrom'].get('runId')}"}
     fixture = Path(rules["fixture"])
     cases = _load((fixture if fixture.is_absolute() else root / fixture) / "reference-cases.json")
+    try:
+        generated_label = generated_dir.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        generated_label = generated_dir.as_posix()
     return {
         "runId": rules.get("runId"),
         "rules": rules,
         "parity": parity,
         "repairs": repairs,
         "manifest": manifest,
+        "generatedDir": generated_label,
         "evidence": summarize(rules, parity, repairs, manifest, cases),
     }
+
+
+def generated_dir_for(run_dir: Path, root: Path = ROOT) -> Path:
+    """A run made by `fluxora demo` keeps its own generated/ folder; otherwise use the committed one."""
+    own = run_dir / "generated"
+    return own if (own / "manifest.json").is_file() else root / "generated"
 
 
 def summarize(rules: dict, parity: dict | None, repairs: dict | None, manifest: dict | None, cases: dict | None) -> dict:
@@ -142,8 +154,8 @@ def render_markdown(run: dict, demo_timings: list[dict] | None = None) -> str:
         files = run["manifest"]["files"]
         rule_files = [f for f in files if f["path"].startswith("api/Rules/")]
         out.append(
-            f"- **Rebuild:** {len(files)} files generated under `generated/`, including {len(rule_files)} rule files, "
-            "each traceable to one rule ID."
+            f"- **Rebuild:** {len(files)} files generated under `{run.get('generatedDir', 'generated')}/`, including "
+            f"{len(rule_files)} rule files, each traceable to one rule ID."
         )
     p = ev["parity"]
     if p:

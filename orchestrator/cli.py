@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sys
+import threading
+import time
 from pathlib import Path
 
 import typer
@@ -211,6 +214,168 @@ def serve(
         typer.echo("\nStopped.")
     finally:
         server.server_close()
+
+
+@app.command(help="Run the whole pipeline: Transform, approve, Rebuild, Verify (clean, then with the seeded defect and repair), evidence. Times every stage.")
+def demo(
+    pause: bool = typer.Option(False, "--pause", help="Wait for you to approve the rules in the dashboard instead of auto-approving."),
+    offline: bool = typer.Option(False, "--offline", help="Never call an LLM; use only the committed cache and recorded patch."),
+    port: int = typer.Option(verify.DEFAULT_PORT, "--port", help="Local port for the API under test."),
+    runs_dir: Path = typer.Option(DEFAULT_RUNS, "--runs-dir", hidden=True),
+) -> None:
+    fixture = ROOT / "fixtures" / "claim-triage"
+    client = LLMClient(get_settings(offline=offline), log=lambda _: None)
+    stages: list[dict] = []
+    demo_start = time.perf_counter()
+
+    def begin(number: int, title: str) -> tuple[float, int, int]:
+        typer.echo("")
+        typer.secho(f"== {number}/6  {title} ==", bold=True)
+        return time.perf_counter(), client.cache_hits, client.live_calls
+
+    def finish(title: str, started: tuple[float, int, int], mode: str | None = None) -> None:
+        seconds = time.perf_counter() - started[0]
+        stages.append({"stage": title, "seconds": seconds, "mode": mode or _llm_mode(client.cache_hits - started[1], client.live_calls - started[2])})
+
+    typer.secho("Fluxora demo: Transform. Rebuild. Verify.", bold=True)
+    typer.echo(f"LLM: {client.mode}. Timings below are measured on this machine; each says whether an LLM answered live, from the cache, or by replay.")
+
+    # 1. Transform: extract
+    s = begin(1, "Transform: extract the rule register")
+    try:
+        extraction = build_register(fixture, client)
+    except (ExtractError, LLMError) as e:
+        _fail(str(e))
+    extraction.register["fixture"] = "fixtures/claim-triage"
+    run_id, rules_path = register.new_run(runs_dir, extraction.register)
+    reg = extraction.register
+    typer.echo(f"Run {run_id}: {len(reg['rules'])} rules, {len(reg['unsupported'])} unsupported items "
+               f"({', '.join(u['construct'] for u in reg['unsupported'])}).")
+    finish("Transform: extract", s)
+
+    # 2. Transform: human gate
+    s = begin(2, "Transform: human approval gate")
+    if pause:
+        if not (dashboard.DASHBOARD_DIST / "index.html").is_file():
+            _fail("--pause needs the dashboard: cd dashboard && npm install && npm run build")
+        server = dashboard.make_server(rules_path.parent, root=ROOT)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        typer.secho(f"Approve or reject each rule at http://127.0.0.1:{dashboard.DEFAULT_PORT}/#transform  (waiting; Ctrl+C aborts)", bold=True)
+        try:
+            while any(r["status"] == "pending" for r in register.load(rules_path)["rules"]):
+                time.sleep(1)
+        finally:
+            server.shutdown()
+            server.server_close()
+        gate_mode = "human, in the dashboard (includes your decision time)"
+    else:
+        data = register.load(rules_path)
+        register.approve(data, approve_all=True, reject=[])
+        register.save(rules_path, data)
+        gate_mode = "auto-approved, no human (use --pause to approve in the dashboard)"
+        typer.secho("Human gate AUTO-APPROVED: all rules approved without review. Run `fluxora demo --pause` to approve them yourself.", fg=typer.colors.YELLOW)
+    data = register.load(rules_path)
+    approved = [r["id"] for r in data["rules"] if r["status"] == "approved"]
+    rejected = [r["id"] for r in data["rules"] if r["status"] == "rejected"]
+    typer.echo(f"Approved {len(approved)}; rejected {len(rejected)}{': ' + ', '.join(rejected) if rejected else ''}.")
+    finish("Transform: approval gate", s, gate_mode)
+
+    # 3. Rebuild
+    s = begin(3, "Rebuild: generate the .NET API, Cosmos model, tests and React form")
+    out = rules_path.parent / "generated"
+    try:
+        generation = rebuild.generate(data, client, root=ROOT)
+    except (rebuild.GenerateError, ExtractError, LLMError) as e:
+        _fail(str(e))
+    rebuild.write(generation, out)
+    compared = [p for p in generation.contents if p != "manifest.json" and (ROOT / "generated" / p).is_file()]
+    same = [p for p in compared if (ROOT / "generated" / p).read_bytes() == generation.contents[p]]
+    typer.echo(f"Wrote {len(generation.contents)} files to {_display(out)}/. "
+               f"{len(same)}/{len(compared)} are byte-identical to the committed generated/ code.")
+    for p in sorted(set(compared) - set(same)):
+        typer.secho(f"  differs from committed: {p}", fg=typer.colors.YELLOW)
+    if generation.skipped:
+        typer.secho("Skipped (not approved): " + ", ".join(f"{i} ({st})" for i, st in generation.skipped), fg=typer.colors.YELLOW)
+    finish("Rebuild: generate", s)
+
+    def court(seed: str | None, printing: bool):
+        def on_verdict(stage: str, verdict) -> None:
+            if printing and stage == "initial":
+                _print_court(verdict.parity, "PARITY COURT", "VERDICT" if verdict.passed else "Initial verdict")
+
+        try:
+            return repair.run_court(
+                data, run_dir=rules_path.parent, client=client, seed=seed, port=port, source_api=out / "api",
+                root=ROOT, log=lambda m: typer.echo(m) if printing and not m.startswith("  ") else None,
+                on_verdict=on_verdict, on_attempt=_print_attempt if printing else None,
+            )
+        except (verify.JudgeError, repair.RepairError) as e:
+            _fail(str(e))
+
+    # 4. Verify: clean
+    s = begin(4, "Verify: Parity Court on the generated code")
+    clean = court(None, printing=False)
+    summary = clean.parity["summary"]
+    typer.secho(
+        f"VERDICT: {summary['result']}  {summary['cases']['passed']}/{summary['cases']['total']} cases, "
+        f"{summary['rules']['passed']}/{summary['rules']['total']} rules"
+        + ("" if clean.passed else "  (see runs/" + run_id + "/parity-clean.json)"),
+        fg=typer.colors.GREEN if clean.passed else typer.colors.RED, bold=True,
+    )
+    shutil.copyfile(rules_path.parent / "parity.json", rules_path.parent / "parity-clean.json")
+    finish("Verify: judge clean code", s, _repair_mode(clean.attempts))
+
+    # 5. Verify: seeded defect, repair
+    s = begin(5, "Verify: seed a defect, watch Parity Court go red, repair, go green")
+    seeded = court("threshold", printing=True)
+    if seeded.attempts:
+        _print_court(seeded.parity, "PARITY COURT  (after repair)", "Final verdict")
+    fix = seeded.parity["repair"]
+    if fix["fixed"]:
+        typer.secho(f"Repaired {', '.join(fix['fixed'])} in {fix['attempts']} attempt(s) ({'; '.join(sorted({_mode_label(a) for a in seeded.attempts if a['outcome'] == 'fixed'}))}).",
+                    fg=typer.colors.GREEN)
+    if fix["unresolved"]:
+        typer.secho(f"UNRESOLVED: {', '.join(fix['unresolved'])}", fg=typer.colors.RED, bold=True)
+    finish("Verify: seeded defect + repair", s, _repair_mode(seeded.attempts))
+
+    # 6. Evidence
+    s = begin(6, "Evidence page")
+    write_evidence(rules_path.parent, ROOT, demo_timings=stages)
+    finish("Evidence: write evidence.md", s, "no LLM")
+    total = time.perf_counter() - demo_start
+    rows = stages + [{"stage": "Total", "seconds": total, "mode": ""}]
+    evidence_path = write_evidence(rules_path.parent, ROOT, demo_timings=rows)
+    typer.echo(f"Wrote {_display(evidence_path)}")
+
+    typer.echo("")
+    typer.secho("MEASURED TIMINGS (wall clock on this machine)", bold=True)
+    width = max(len(r["stage"]) for r in rows)
+    typer.echo(f"{'Stage':<{width}}  {'Seconds':>8}  Mode")
+    for row in rows:
+        typer.echo(f"{row['stage']:<{width}}  {row['seconds']:>8.2f}  {row['mode']}")
+    passed = clean.passed and seeded.passed
+    typer.echo("")
+    typer.secho(f"DEMO {'PASSED' if passed else 'FAILED'}: run {run_id}.  See it: fluxora serve {run_id}",
+                fg=typer.colors.GREEN if passed else typer.colors.RED, bold=True)
+    raise typer.Exit(0 if passed else 1)
+
+
+def _llm_mode(hits: int, live: int) -> str:
+    if live and hits:
+        return f"live LLM ({live} calls) + cached LLM ({hits} responses)"
+    if live:
+        return f"live LLM ({live} calls)"
+    if hits:
+        return f"cached LLM ({hits} responses, no API calls)"
+    return "no LLM"
+
+
+def _repair_mode(attempts: list[dict]) -> str:
+    if not attempts:
+        return "no LLM (no repair needed)"
+    labels = {"llm-api": "live LLM", "llm-cache": "cached LLM", "recorded-patch": "replay", "none": "no patch source"}
+    used = sorted({labels.get(a.get("source"), a.get("source", "?")) for a in attempts})
+    return f"repair: {', '.join(used)} ({len(attempts)} attempt(s))"
 
 
 def _mode_label(attempt: dict) -> str:

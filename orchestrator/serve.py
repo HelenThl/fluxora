@@ -16,7 +16,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from . import register
-from .evidence import load_run
+from .evidence import generated_dir_for, load_run
 
 ROOT = Path(__file__).resolve().parent.parent
 DASHBOARD_DIST = ROOT / "dashboard" / "dist"
@@ -62,11 +62,12 @@ def make_server(run_dir: Path, *, port: int = DEFAULT_PORT, dist: Path = DASHBOA
             return self._static(url.path)
 
         def _generated_file(self, rel: str):
-            manifest_path = root / "generated" / "manifest.json"
+            generated = generated_dir_for(run_dir, root)
+            manifest_path = generated / "manifest.json"
             listed = {f["path"] for f in json.loads(manifest_path.read_text(encoding="utf-8"))["files"]} if manifest_path.is_file() else set()
             if rel not in listed:
-                return self._json(404, {"error": "only files listed in generated/manifest.json can be read"})
-            return self._json(200, {"path": rel, "content": (root / "generated" / rel).read_text(encoding="utf-8")})
+                return self._json(404, {"error": "only files listed in the generated manifest can be read"})
+            return self._json(200, {"path": rel, "content": (generated / rel).read_text(encoding="utf-8")})
 
         def _static(self, path: str):
             index = dist / "index.html"
@@ -84,16 +85,18 @@ def make_server(run_dir: Path, *, port: int = DEFAULT_PORT, dist: Path = DASHBOA
 
         # --- POST --------------------------------------------------------------------------------
         def do_POST(self):
+            length = int(self.headers.get("Content-Length") or 0)
+            if length > 10_000:
+                self.close_connection = True
+                return self._json(413, {"error": "request too large"})
+            raw = self.rfile.read(length)  # always drain the body before answering, so the client sees the reply
             if urlparse(self.path).path != "/api/approve":
                 return self._json(404, {"error": "not found"})
             origin = self.headers.get("Origin")
             if origin and not origin.startswith(LOCAL_ORIGINS):
                 return self._json(403, {"error": "approvals are accepted from this machine only"})
-            length = int(self.headers.get("Content-Length") or 0)
-            if length > 10_000:
-                return self._json(413, {"error": "request too large"})
             try:
-                body = json.loads(self.rfile.read(length) or b"{}")
+                body = json.loads(raw or b"{}")
                 approve = [str(r) for r in body.get("approve", [])]
                 reject = [str(r) for r in body.get("reject", [])]
                 approve_all = bool(body.get("all", False))

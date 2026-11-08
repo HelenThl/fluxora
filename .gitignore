@@ -21,3 +21,8 @@ obj/
 
 # Run scratch output
 runs/*/work/
+
+# Runs are local, except the committed reference run used by the dashboard and tests
+runs/*
+!runs/.gitkeep
+!runs/20261108-143433/
