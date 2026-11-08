@@ -1,0 +1,107 @@
+{
+  "solution": {
+    "uniqueName": "FluxoraClaimTriage",
+    "publisherPrefix": "fx",
+    "note": "Synthetic fixture. Mirrors the shape of a Dataverse table definition; not exported from a real environment."
+  },
+  "tables": [
+    {
+      "logicalName": "fx_claim",
+      "schemaName": "fx_Claim",
+      "displayName": "Claim",
+      "displayCollectionName": "Claims",
+      "entitySetName": "fx_claims",
+      "primaryIdAttribute": "fx_claimguid",
+      "primaryNameAttribute": "fx_claimid",
+      "columns": [
+        {
+          "field": "ClaimId",
+          "logicalName": "fx_claimid",
+          "displayName": "Claim Id",
+          "type": "String",
+          "maxLength": 20,
+          "required": true,
+          "isPrimaryName": true
+        },
+        {
+          "field": "PolicyNumber",
+          "logicalName": "fx_policynumber",
+          "displayName": "Policy Number",
+          "type": "String",
+          "maxLength": 20,
+          "required": true
+        },
+        {
+          "field": "ClaimType",
+          "logicalName": "fx_claimtype",
+          "displayName": "Claim Type",
+          "type": "Picklist",
+          "required": true,
+          "options": [
+            { "value": 100000000, "label": "Motor" },
+            { "value": 100000001, "label": "Home" },
+            { "value": 100000002, "label": "Travel" }
+          ]
+        },
+        {
+          "field": "PolicyStartDate",
+          "logicalName": "fx_policystartdate",
+          "displayName": "Policy Start Date",
+          "type": "DateTime",
+          "format": "DateOnly",
+          "behavior": "DateOnly",
+          "required": true
+        },
+        {
+          "field": "IncidentDate",
+          "logicalName": "fx_incidentdate",
+          "displayName": "Incident Date",
+          "type": "DateTime",
+          "format": "DateOnly",
+          "behavior": "DateOnly",
+          "required": true
+        },
+        {
+          "field": "ReportedDate",
+          "logicalName": "fx_reporteddate",
+          "displayName": "Reported Date",
+          "type": "DateTime",
+          "format": "DateOnly",
+          "behavior": "DateOnly",
+          "required": true
+        },
+        {
+          "field": "ClaimAmount",
+          "logicalName": "fx_claimamount",
+          "displayName": "Claim Amount",
+          "type": "Money",
+          "precision": 2,
+          "currency": "GBP",
+          "required": true
+        },
+        {
+          "field": "HasReceipt",
+          "logicalName": "fx_hasreceipt",
+          "displayName": "Has Receipt",
+          "type": "Boolean",
+          "default": false,
+          "required": false
+        },
+        {
+          "field": "Status",
+          "logicalName": "fx_status",
+          "displayName": "Status",
+          "type": "Picklist",
+          "required": false,
+          "options": [
+            { "value": 100000000, "label": "Not covered" },
+            { "value": 100000001, "label": "Below excess" },
+            { "value": 100000002, "label": "Manual review" },
+            { "value": 100000003, "label": "Pending approval" },
+            { "value": 100000004, "label": "Approved" }
+          ]
+        }
+      ]
+    }
+  ]
+}

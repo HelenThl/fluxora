@@ -1,0 +1,149 @@
+{
+  "name": "ClaimTriageFlow",
+  "properties": {
+    "displayName": "Claim triage",
+    "description": "Synthetic fixture. Called by ClaimScreen.btnSubmit for every valid claim. Precedence: late report (Manual review) beats manager approval (Pending approval), which beats the default (Approved).",
+    "state": "Started",
+    "connectionReferences": {
+      "shared_office365": {
+        "connectionName": "shared-office365-fixture",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_office365"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": { "defaultValue": {}, "type": "Object" },
+        "$authentication": { "defaultValue": {}, "type": "SecureObject" }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ClaimAmount": { "title": "ClaimAmount", "type": "number", "x-ms-content-hint": "NUMBER" },
+                "IncidentDate": { "title": "IncidentDate", "type": "string", "format": "date", "x-ms-content-hint": "DATE" },
+                "ReportedDate": { "title": "ReportedDate", "type": "string", "format": "date", "x-ms-content-hint": "DATE" }
+              },
+              "required": ["ClaimAmount", "IncidentDate", "ReportedDate"]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Initialize_LateReport": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [ { "name": "LateReport", "type": "boolean", "value": false } ]
+          },
+          "runAfter": {}
+        },
+        "Initialize_Status": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [ { "name": "Status", "type": "string", "value": "" } ]
+          },
+          "runAfter": { "Initialize_LateReport": ["Succeeded"] }
+        },
+        "Condition_LateReport": {
+          "type": "If",
+          "description": "Reported more than 30 days after the incident. Checked first, so a late report wins over manager approval.",
+          "expression": {
+            "and": [
+              {
+                "greater": [
+                  "@div(sub(ticks(triggerBody()?['ReportedDate']), ticks(triggerBody()?['IncidentDate'])), 864000000000)",
+                  30
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Set_LateReport_true": {
+              "type": "SetVariable",
+              "inputs": { "name": "LateReport", "value": true },
+              "runAfter": {}
+            },
+            "Set_Status_Manual_review": {
+              "type": "SetVariable",
+              "inputs": { "name": "Status", "value": "Manual review" },
+              "runAfter": { "Set_LateReport_true": ["Succeeded"] }
+            }
+          },
+          "else": {
+            "actions": {
+              "Condition_Amount": {
+                "type": "If",
+                "description": "Claims over £5,000 are routed to a manager for approval.",
+                "expression": {
+                  "and": [
+                    { "greater": [ "@triggerBody()?['ClaimAmount']", 5000 ] }
+                  ]
+                },
+                "actions": {
+                  "Set_Status_Pending_approval": {
+                    "type": "SetVariable",
+                    "inputs": { "name": "Status", "value": "Pending approval" },
+                    "runAfter": {}
+                  },
+                  "Send_an_email": {
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "host": {
+                        "connectionName": "shared_office365",
+                        "operationId": "SendEmailV2",
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                      },
+                      "parameters": {
+                        "emailMessage/To": "claims-manager@example.com",
+                        "emailMessage/Subject": "Claim waiting for manager approval",
+                        "emailMessage/Body": "<p>A claim for @{triggerBody()?['ClaimAmount']} needs manager approval.</p>"
+                      },
+                      "authentication": "@parameters('$authentication')"
+                    },
+                    "runAfter": { "Set_Status_Pending_approval": ["Succeeded"] }
+                  }
+                },
+                "else": {
+                  "actions": {
+                    "Set_Status_Approved": {
+                      "type": "SetVariable",
+                      "description": "Default branch: nothing else applied.",
+                      "inputs": { "name": "Status", "value": "Approved" },
+                      "runAfter": {}
+                    }
+                  }
+                },
+                "runAfter": {}
+              }
+            }
+          },
+          "runAfter": { "Initialize_Status": ["Succeeded"] }
+        },
+        "Respond_to_a_PowerApp_or_flow": {
+          "type": "Response",
+          "kind": "PowerApp",
+          "inputs": {
+            "statusCode": 200,
+            "body": {
+              "status": "@variables('Status')",
+              "latereport": "@variables('LateReport')"
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "title": "Status", "type": "string", "x-ms-content-hint": "TEXT", "x-ms-dynamically-added": true },
+                "latereport": { "title": "LateReport", "type": "boolean", "x-ms-content-hint": "BOOLEAN", "x-ms-dynamically-added": true }
+              }
+            }
+          },
+          "runAfter": { "Condition_LateReport": ["Succeeded"] }
+        }
+      }
+    }
+  }
+}

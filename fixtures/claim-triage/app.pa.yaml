@@ -1,0 +1,210 @@
+# Claim triage: synthetic Power Apps canvas source.
+# Loosely follows the pa.yaml layout from `pac canvas unpack`. It is not byte-exact.
+# All data is synthetic.
+#
+# Status precedence (highest first). btnSubmit is disabled while any validation error shows.
+#   1. Validation errors  AmountInvalid, ClaimTypeInvalid, IncidentInFuture, ReceiptMissing
+#                         (all failing checks are shown; nothing is submitted)
+#   2. Not covered        NotCovered
+#   3. Below excess       BelowExcess
+#   4. Manual review      ClaimTriageFlow: Condition_LateReport
+#   5. Pending approval   ClaimTriageFlow: Condition_Amount
+#   6. Approved           ClaimTriageFlow: default branch
+#
+# Rule formulas are named formulas in App.Formulas, one per line, written `Name = <formula>;`.
+
+App:
+  Properties:
+    StartScreen: =ClaimScreen
+    Formulas: |-
+      =ClaimAmount = Value(txtClaimAmount.Text);
+      ClaimType = drpClaimType.Selected.Value;
+      PolicyStartDate = dpPolicyStartDate.SelectedDate;
+      IncidentDate = dpIncidentDate.SelectedDate;
+      ReportedDate = dpReportedDate.SelectedDate;
+      HasReceipt = chkHasReceipt.Value;
+      AmountInvalid = IsBlank(ClaimAmount) || ClaimAmount <= 0;
+      ClaimTypeInvalid = Not(ClaimType in ["Motor","Home","Travel"]);
+      IncidentInFuture = IncidentDate > Today();
+      NotCovered = IncidentDate < PolicyStartDate;
+      Excess = Switch(ClaimType,"Motor",250,"Home",350,"Travel",100);
+      Payable = Max(0, ClaimAmount - Excess);
+      BelowExcess = Payable = 0;
+      ReceiptMissing = ClaimType = "Travel" && ClaimAmount > 2000 && !HasReceipt;
+
+DataSources:
+  Claims:
+    Type: Dataverse
+    Table: fx_claim
+  ClaimTriageFlow:
+    Type: PowerAutomateFlow
+    Definition: flow.json
+
+Screens:
+  ClaimScreen:
+    Properties:
+      Fill: =RGBA(245, 246, 248, 1)
+    Children:
+      - lblTitle:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="New claim"
+            Size: =20
+            FontWeight: =FontWeight.Semibold
+            X: =40
+            Y: =24
+
+      - txtClaimId:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            HintText: ="Claim ID, e.g. CLM-000123"
+            Default: =""
+            X: =40
+            Y: =80
+
+      - txtPolicyNumber:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            HintText: ="Policy number, e.g. POL-000123"
+            Default: =""
+            X: =40
+            Y: =130
+
+      - drpClaimType:
+          Control: Classic/DropDown@2.3.1
+          Properties:
+            Items: =["Motor","Home","Travel"]
+            AllowEmptySelection: =true
+            X: =40
+            Y: =180
+
+      - dpPolicyStartDate:
+          Control: Classic/DatePicker@2.6.0
+          Properties:
+            DefaultDate: =Blank()
+            Format: =DateTimeFormat.ShortDate
+            X: =40
+            Y: =230
+
+      - dpIncidentDate:
+          Control: Classic/DatePicker@2.6.0
+          Properties:
+            DefaultDate: =Blank()
+            Format: =DateTimeFormat.ShortDate
+            X: =40
+            Y: =280
+
+      - dpReportedDate:
+          Control: Classic/DatePicker@2.6.0
+          Properties:
+            DefaultDate: =Blank()
+            Format: =DateTimeFormat.ShortDate
+            X: =40
+            Y: =330
+
+      - txtClaimAmount:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            HintText: ="Claim amount (£)"
+            Format: =TextFormat.Number
+            Default: =""
+            X: =40
+            Y: =380
+
+      - chkHasReceipt:
+          Control: Classic/CheckBox@2.1.0
+          Properties:
+            Text: ="Receipt attached"
+            Default: =false
+            X: =40
+            Y: =430
+
+      - lblErrAmount:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Amount must be greater than zero"
+            Visible: =AmountInvalid
+            Color: =RGBA(168, 0, 0, 1)
+            X: =360
+            Y: =380
+
+      - lblErrClaimType:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Choose a valid claim type"
+            Visible: =ClaimTypeInvalid
+            Color: =RGBA(168, 0, 0, 1)
+            X: =360
+            Y: =180
+
+      - lblErrIncidentDate:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Incident date cannot be in the future"
+            Visible: =IncidentInFuture
+            Color: =RGBA(168, 0, 0, 1)
+            X: =360
+            Y: =280
+
+      - lblErrReceipt:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="A receipt is required for travel claims over £2,000"
+            Visible: =ReceiptMissing
+            Color: =RGBA(168, 0, 0, 1)
+            X: =360
+            Y: =430
+
+      - lblExcess:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Excess: " & Text(Excess, "£#,##0.00")
+            X: =40
+            Y: =490
+
+      - lblPayable:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Payable: " & Text(Payable, "£#,##0.00")
+            X: =40
+            Y: =520
+
+      - btnSubmit:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Text: ="Submit claim"
+            DisplayMode: =If(AmountInvalid || ClaimTypeInvalid || IncidentInFuture || ReceiptMissing, DisplayMode.Disabled, DisplayMode.Edit)
+            OnSelect: |-
+              =Set(varTriage, ClaimTriageFlow.Run(ClaimAmount, Text(IncidentDate, "yyyy-mm-dd"), Text(ReportedDate, "yyyy-mm-dd")));
+              Set(varStatus, If(NotCovered, "Not covered", BelowExcess, "Below excess", varTriage.status));
+              Patch(Claims, Defaults(Claims), {
+                  'Claim Id': txtClaimId.Text,
+                  'Policy Number': txtPolicyNumber.Text,
+                  'Claim Type': LookUp(Choices(Claims.'Claim Type'), Value = ClaimType),
+                  'Policy Start Date': PolicyStartDate,
+                  'Incident Date': IncidentDate,
+                  'Reported Date': ReportedDate,
+                  'Claim Amount': ClaimAmount,
+                  'Has Receipt': HasReceipt,
+                  Status: LookUp(Choices(Claims.Status), Value = varStatus)
+              });
+              Notify("Claim " & txtClaimId.Text & " submitted: " & varStatus, NotificationType.Success)
+            X: =40
+            Y: =570
+
+      - lblLateReport:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Reported more than 30 days after the incident"
+            Visible: =varTriage.latereport
+            X: =40
+            Y: =620
+
+      - lblStatus:
+          Control: Label@2.5.1
+          Properties:
+            Text: ="Status: " & varStatus
+            Visible: =!IsBlank(varStatus)
+            FontWeight: =FontWeight.Semibold
+            X: =40
+            Y: =650
