@@ -14,7 +14,42 @@ React + .NET 8 + Cosmos DB, then proves the migrated app behaves the same, rule 
 | Rebuild | Generator | `generated/api/` (.NET 8 + Cosmos model) and `generated/web/` (React form) |
 | Verify | Judge | `runs/<run-id>/parity.json`, plus `repairs.json` from the bounded repair loop |
 
-> Status: **M1** (scaffold, fixture, Power Fx oracle). Run instructions arrive with M7.
+> Status: **M2** (fixture, Power Fx oracle, Extractor). Full run instructions arrive with M7.
+
+## Setup
+
+```bash
+python -m venv .venv
+.venv/Scripts/pip install -e ".[dev]"        # macOS/Linux: .venv/bin/pip
+```
+
+LLM settings come from `.env` (copy `.env.example`): `LLM_PROVIDER` (`anthropic` or `openai`),
+`LLM_API_KEY`, `LLM_MODEL`, and optionally `LLM_BASE_URL` for an OpenAI-compatible endpoint.
+Without a key, everything runs offline from the committed cache in `orchestrator/cache/`.
+
+## Transform: rule register
+
+```bash
+fluxora extract fixtures/claim-triage              # -> runs/<run-id>/rules.json
+fluxora extract fixtures/claim-triage --offline    # cache only, no API calls
+fluxora approve <run-id> --all [--reject R05,R06]  # human gate, timestamped
+```
+
+How the register is built:
+
+- **Parsed by code, not the LLM:** each rule's source file and ref, formula, inputs, output, the
+  status precedence, and the `unsupported` list. Unsupported means the parser saw it but cannot
+  migrate it, so it is listed rather than dropped.
+- **Written by the LLM:** only the plain-English `rule` sentence and a `confidence` value, using
+  `orchestrator/prompts/extract_rule.md`. Every reply is cached under `orchestrator/cache/`, keyed by
+  model and prompt, and the cache is committed, so the demo needs no API key.
+- **Rule IDs:** pinned in `fixtures/claim-triage/rule-ids.json`, so reference cases can cite stable
+  IDs. The flow checks "late report" before "amount", so discovery order alone would not give the
+  brief's numbering.
+- **Where the cached sentences came from:** they were written in a Claude Code session from the
+  exact prompts, not by an API call. Their cache entries say so: provider `claude-code`, model
+  `claude-code:claude-opus-5-5`. To regenerate them with a live model, delete
+  `orchestrator/cache/*.json`, fill in `.env`, and run `fluxora extract fixtures/claim-triage`.
 
 ## Layout
 

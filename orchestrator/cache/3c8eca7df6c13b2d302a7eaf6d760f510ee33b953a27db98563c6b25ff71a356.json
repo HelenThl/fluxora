@@ -1,0 +1,10 @@
+{
+  "key": "3c8eca7df6c13b2d302a7eaf6d760f510ee33b953a27db98563c6b25ff71a356",
+  "model": "claude-code:claude-opus-5-5",
+  "prompt": "You are documenting business rules found in a Power Platform app that is being migrated. A business analyst and a claims manager will read your sentence on screen when they approve the rule register.\n\nWrite ONE plain-English sentence that says what this rule does to a claim.\n\n- Use only the facts below. Do not add thresholds, fields, outcomes or reasons that are not shown.\n- Write for a business reader: no code, no function names, and no field names written as code. Say \"claim amount\", not \"ClaimAmount\".\n- Write money in pounds, for example £5,000.\n- Keep it under 30 words, in the present tense.\n\nThen rate how sure you are that the sentence states the rule exactly, with nothing lost or added:\n- \"high\": the formula maps directly onto the sentence.\n- \"medium\": the sentence needed some interpretation, such as converting units or reading an implied default.\n- \"low\": the meaning of the formula is unclear.\n\nReply with JSON only, no code fences: {\"rule\": \"<sentence>\", \"confidence\": \"high\" | \"medium\" | \"low\"}\n\nRule: R11\nSource: flow.json, actions.Condition_LateReport.else.actions.Condition_Amount.else.actions.Set_Status_Approved\nFormula: otherwise\nInputs: (none)\nOutput: Status\nWhat happens: If none of the flow's earlier conditions applied, the flow sets Status = 'Approved'.\n",
+  "prompt_sha256": "82f9d4e4db9b5c22945618f0619ef62bbc66078d71160c17cc6f1f904390d4b8",
+  "provider": "claude-code",
+  "response": "{\"rule\": \"If none of the flow's earlier checks apply, the claim's status is set to Approved.\", \"confidence\": \"high\"}",
+  "served_by": "Claude Opus 5.5 in a Claude Code session; written in chat from the prompt, no API call",
+  "system": ""
+}

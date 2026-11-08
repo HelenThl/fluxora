@@ -1,0 +1,10 @@
+{
+  "key": "4bb1f69a6c69827c7db2dd5d1a94a98d1a7f8b7b5aa4a94d288fd32e03ab9cfd",
+  "model": "claude-code:claude-opus-5-5",
+  "prompt": "You are documenting business rules found in a Power Platform app that is being migrated. A business analyst and a claims manager will read your sentence on screen when they approve the rule register.\n\nWrite ONE plain-English sentence that says what this rule does to a claim.\n\n- Use only the facts below. Do not add thresholds, fields, outcomes or reasons that are not shown.\n- Write for a business reader: no code, no function names, and no field names written as code. Say \"claim amount\", not \"ClaimAmount\".\n- Write money in pounds, for example £5,000.\n- Keep it under 30 words, in the present tense.\n\nThen rate how sure you are that the sentence states the rule exactly, with nothing lost or added:\n- \"high\": the formula maps directly onto the sentence.\n- \"medium\": the sentence needed some interpretation, such as converting units or reading an implied default.\n- \"low\": the meaning of the formula is unclear.\n\nReply with JSON only, no code fences: {\"rule\": \"<sentence>\", \"confidence\": \"high\" | \"medium\" | \"low\"}\n\nRule: R05\nSource: app.pa.yaml, App.Formulas.Excess\nFormula: Switch(ClaimType,\"Motor\",250,\"Home\",350,\"Travel\",100)\nInputs: ClaimType\nOutput: Excess\nWhat happens: Computes Excess for the claim; the claim screen shows it.\n",
+  "prompt_sha256": "a2c9ab28abf7504e390b691dc5d0f175c12582fa02d544d91597cf624bfcacc7",
+  "provider": "claude-code",
+  "response": "{\"rule\": \"The excess is £250 for Motor claims, £350 for Home claims and £100 for Travel claims.\", \"confidence\": \"high\"}",
+  "served_by": "Claude Opus 5.5 in a Claude Code session; written in chat from the prompt, no API call",
+  "system": ""
+}

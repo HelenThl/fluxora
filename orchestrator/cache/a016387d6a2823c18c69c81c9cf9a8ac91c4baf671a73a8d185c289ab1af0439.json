@@ -1,0 +1,10 @@
+{
+  "key": "a016387d6a2823c18c69c81c9cf9a8ac91c4baf671a73a8d185c289ab1af0439",
+  "model": "claude-code:claude-opus-5-5",
+  "prompt": "You are documenting business rules found in a Power Platform app that is being migrated. A business analyst and a claims manager will read your sentence on screen when they approve the rule register.\n\nWrite ONE plain-English sentence that says what this rule does to a claim.\n\n- Use only the facts below. Do not add thresholds, fields, outcomes or reasons that are not shown.\n- Write for a business reader: no code, no function names, and no field names written as code. Say \"claim amount\", not \"ClaimAmount\".\n- Write money in pounds, for example £5,000.\n- Keep it under 30 words, in the present tense.\n\nThen rate how sure you are that the sentence states the rule exactly, with nothing lost or added:\n- \"high\": the formula maps directly onto the sentence.\n- \"medium\": the sentence needed some interpretation, such as converting units or reading an implied default.\n- \"low\": the meaning of the formula is unclear.\n\nReply with JSON only, no code fences: {\"rule\": \"<sentence>\", \"confidence\": \"high\" | \"medium\" | \"low\"}\n\nRule: R09\nSource: flow.json, actions.Condition_LateReport.else.actions.Condition_Amount\nFormula: ClaimAmount > 5000\nInputs: ClaimAmount\nOutput: Status\nWhat happens: When true, the flow sets Status = 'Pending approval'.\n",
+  "prompt_sha256": "9739e5f57eadf477af66468ae8595aed0912de21cf2561954d55cabda31885e9",
+  "provider": "claude-code",
+  "response": "{\"rule\": \"If the claim amount is over £5,000, the claim's status is set to Pending approval.\", \"confidence\": \"high\"}",
+  "served_by": "Claude Opus 5.5 in a Claude Code session; written in chat from the prompt, no API call",
+  "system": ""
+}

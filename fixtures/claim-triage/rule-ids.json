@@ -1,0 +1,16 @@
+{
+  "note": "Pinned rule IDs. The extractor finds every rule on its own; this file only names them so reference cases and parity results can cite stable IDs. Keys are <file>#<ref>. A mapped ref the extractor cannot find fails the run; a rule found but not listed here gets the next free ID with a warning.",
+  "ids": {
+    "app.pa.yaml#App.Formulas.AmountInvalid": "R01",
+    "app.pa.yaml#App.Formulas.ClaimTypeInvalid": "R02",
+    "app.pa.yaml#App.Formulas.IncidentInFuture": "R03",
+    "app.pa.yaml#App.Formulas.NotCovered": "R04",
+    "app.pa.yaml#App.Formulas.Excess": "R05",
+    "app.pa.yaml#App.Formulas.Payable": "R06",
+    "app.pa.yaml#App.Formulas.BelowExcess": "R07",
+    "app.pa.yaml#App.Formulas.ReceiptMissing": "R08",
+    "flow.json#actions.Condition_LateReport.else.actions.Condition_Amount": "R09",
+    "flow.json#actions.Condition_LateReport": "R10",
+    "flow.json#actions.Condition_LateReport.else.actions.Condition_Amount.else.actions.Set_Status_Approved": "R11"
+  }
+}

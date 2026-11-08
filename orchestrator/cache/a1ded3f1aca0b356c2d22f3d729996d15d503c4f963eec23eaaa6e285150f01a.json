@@ -1,0 +1,10 @@
+{
+  "key": "a1ded3f1aca0b356c2d22f3d729996d15d503c4f963eec23eaaa6e285150f01a",
+  "model": "claude-code:claude-opus-5-5",
+  "prompt": "You are documenting business rules found in a Power Platform app that is being migrated. A business analyst and a claims manager will read your sentence on screen when they approve the rule register.\n\nWrite ONE plain-English sentence that says what this rule does to a claim.\n\n- Use only the facts below. Do not add thresholds, fields, outcomes or reasons that are not shown.\n- Write for a business reader: no code, no function names, and no field names written as code. Say \"claim amount\", not \"ClaimAmount\".\n- Write money in pounds, for example £5,000.\n- Keep it under 30 words, in the present tense.\n\nThen rate how sure you are that the sentence states the rule exactly, with nothing lost or added:\n- \"high\": the formula maps directly onto the sentence.\n- \"medium\": the sentence needed some interpretation, such as converting units or reading an implied default.\n- \"low\": the meaning of the formula is unclear.\n\nReply with JSON only, no code fences: {\"rule\": \"<sentence>\", \"confidence\": \"high\" | \"medium\" | \"low\"}\n\nRule: R10\nSource: flow.json, actions.Condition_LateReport\nFormula: div(sub(ticks(ReportedDate), ticks(IncidentDate)), 864000000000) > 30\nInputs: ReportedDate, IncidentDate\nOutput: LateReport, Status\nWhat happens: When true, the flow sets LateReport = true and Status = 'Manual review'.\n",
+  "prompt_sha256": "c290dc46eb244e4b5b08acb45d34783a1e0f37c546b0133daa56996f5c434d2a",
+  "provider": "claude-code",
+  "response": "{\"rule\": \"If the claim is reported more than 30 days after the incident, it is flagged as a late report and its status is set to Manual review.\", \"confidence\": \"medium\"}",
+  "served_by": "Claude Opus 5.5 in a Claude Code session; written in chat from the prompt, no API call",
+  "system": ""
+}

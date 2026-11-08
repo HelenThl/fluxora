@@ -158,14 +158,16 @@ Screens:
       - lblExcess:
           Control: Label@2.5.1
           Properties:
-            Text: ="Excess: " & Text(Excess, "£#,##0.00")
+            Text: |-
+              ="Excess: " & Text(Excess, "£#,##0.00")
             X: =40
             Y: =490
 
       - lblPayable:
           Control: Label@2.5.1
           Properties:
-            Text: ="Payable: " & Text(Payable, "£#,##0.00")
+            Text: |-
+              ="Payable: " & Text(Payable, "£#,##0.00")
             X: =40
             Y: =520
 
@@ -203,7 +205,8 @@ Screens:
       - lblStatus:
           Control: Label@2.5.1
           Properties:
-            Text: ="Status: " & varStatus
+            Text: |-
+              ="Status: " & varStatus
             Visible: =!IsBlank(varStatus)
             FontWeight: =FontWeight.Semibold
             X: =40

@@ -1,0 +1,10 @@
+{
+  "key": "7430508d5d42db392e05675bb47f8df8ff4aaeb708a5f435d34c3e7cadff8a6c",
+  "model": "claude-code:claude-opus-5-5",
+  "prompt": "You are documenting business rules found in a Power Platform app that is being migrated. A business analyst and a claims manager will read your sentence on screen when they approve the rule register.\n\nWrite ONE plain-English sentence that says what this rule does to a claim.\n\n- Use only the facts below. Do not add thresholds, fields, outcomes or reasons that are not shown.\n- Write for a business reader: no code, no function names, and no field names written as code. Say \"claim amount\", not \"ClaimAmount\".\n- Write money in pounds, for example £5,000.\n- Keep it under 30 words, in the present tense.\n\nThen rate how sure you are that the sentence states the rule exactly, with nothing lost or added:\n- \"high\": the formula maps directly onto the sentence.\n- \"medium\": the sentence needed some interpretation, such as converting units or reading an implied default.\n- \"low\": the meaning of the formula is unclear.\n\nReply with JSON only, no code fences: {\"rule\": \"<sentence>\", \"confidence\": \"high\" | \"medium\" | \"low\"}\n\nRule: R03\nSource: app.pa.yaml, App.Formulas.IncidentInFuture\nFormula: IncidentDate > Today()\nInputs: IncidentDate\nOutput: Errors\nWhat happens: When true, the app shows the message 'Incident date cannot be in the future' and the Submit button is disabled, so the claim cannot be submitted.\n",
+  "prompt_sha256": "f873c3d9c4a2eb141c29043895c723efebb285ebdf6923b807aa26221321b141",
+  "provider": "claude-code",
+  "response": "{\"rule\": \"A claim cannot be submitted if the incident date is later than today.\", \"confidence\": \"high\"}",
+  "served_by": "Claude Opus 5.5 in a Claude Code session; written in chat from the prompt, no API call",
+  "system": ""
+}

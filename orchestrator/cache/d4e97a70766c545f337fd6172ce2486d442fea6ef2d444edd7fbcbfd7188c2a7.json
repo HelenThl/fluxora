@@ -1,0 +1,10 @@
+{
+  "key": "d4e97a70766c545f337fd6172ce2486d442fea6ef2d444edd7fbcbfd7188c2a7",
+  "model": "claude-code:claude-opus-5-5",
+  "prompt": "You are documenting business rules found in a Power Platform app that is being migrated. A business analyst and a claims manager will read your sentence on screen when they approve the rule register.\n\nWrite ONE plain-English sentence that says what this rule does to a claim.\n\n- Use only the facts below. Do not add thresholds, fields, outcomes or reasons that are not shown.\n- Write for a business reader: no code, no function names, and no field names written as code. Say \"claim amount\", not \"ClaimAmount\".\n- Write money in pounds, for example £5,000.\n- Keep it under 30 words, in the present tense.\n\nThen rate how sure you are that the sentence states the rule exactly, with nothing lost or added:\n- \"high\": the formula maps directly onto the sentence.\n- \"medium\": the sentence needed some interpretation, such as converting units or reading an implied default.\n- \"low\": the meaning of the formula is unclear.\n\nReply with JSON only, no code fences: {\"rule\": \"<sentence>\", \"confidence\": \"high\" | \"medium\" | \"low\"}\n\nRule: R07\nSource: app.pa.yaml, App.Formulas.BelowExcess\nFormula: Payable = 0\nInputs: Payable\nOutput: Status\nWhat happens: When true (and no earlier check has applied), Status is set to 'Below excess'.\n",
+  "prompt_sha256": "0aacc80b06eb280ecc9b02272affb3d67245be62b769d5fa010c6b9ace200b95",
+  "provider": "claude-code",
+  "response": "{\"rule\": \"If the payable amount is £0, the claim's status is set to Below excess.\", \"confidence\": \"high\"}",
+  "served_by": "Claude Opus 5.5 in a Claude Code session; written in chat from the prompt, no API call",
+  "system": ""
+}

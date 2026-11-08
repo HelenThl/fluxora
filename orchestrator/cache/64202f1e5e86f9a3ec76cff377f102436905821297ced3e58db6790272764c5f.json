@@ -1,0 +1,10 @@
+{
+  "key": "64202f1e5e86f9a3ec76cff377f102436905821297ced3e58db6790272764c5f",
+  "model": "claude-code:claude-opus-5-5",
+  "prompt": "You are documenting business rules found in a Power Platform app that is being migrated. A business analyst and a claims manager will read your sentence on screen when they approve the rule register.\n\nWrite ONE plain-English sentence that says what this rule does to a claim.\n\n- Use only the facts below. Do not add thresholds, fields, outcomes or reasons that are not shown.\n- Write for a business reader: no code, no function names, and no field names written as code. Say \"claim amount\", not \"ClaimAmount\".\n- Write money in pounds, for example £5,000.\n- Keep it under 30 words, in the present tense.\n\nThen rate how sure you are that the sentence states the rule exactly, with nothing lost or added:\n- \"high\": the formula maps directly onto the sentence.\n- \"medium\": the sentence needed some interpretation, such as converting units or reading an implied default.\n- \"low\": the meaning of the formula is unclear.\n\nReply with JSON only, no code fences: {\"rule\": \"<sentence>\", \"confidence\": \"high\" | \"medium\" | \"low\"}\n\nRule: R02\nSource: app.pa.yaml, App.Formulas.ClaimTypeInvalid\nFormula: Not(ClaimType in [\"Motor\",\"Home\",\"Travel\"])\nInputs: ClaimType\nOutput: Errors\nWhat happens: When true, the app shows the message 'Choose a valid claim type' and the Submit button is disabled, so the claim cannot be submitted.\n",
+  "prompt_sha256": "8cf9f7325647d95d5dbf83422727332c9148803fc9d5ee91d12c77b014b44263",
+  "provider": "claude-code",
+  "response": "{\"rule\": \"A claim cannot be submitted unless its claim type is Motor, Home or Travel.\", \"confidence\": \"high\"}",
+  "served_by": "Claude Opus 5.5 in a Claude Code session; written in chat from the prompt, no API call",
+  "system": ""
+}
