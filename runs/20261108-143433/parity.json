@@ -1,8 +1,8 @@
 {
   "runId": "20261108-143433",
-  "judgedAt": "2026-11-08T14:53:37Z",
+  "judgedAt": "2026-11-08T15:05:44Z",
   "api": {
-    "project": "generated/api",
+    "project": "runs/20261108-143433/work/api",
     "url": "http://127.0.0.1:5080"
   },
   "referenceCases": {
@@ -12,10 +12,10 @@
     "unchanged": true
   },
   "timings": {
-    "buildSeconds": 1.85,
-    "startupSeconds": 1.21,
-    "casesSeconds": 0.51,
-    "totalSeconds": 3.57
+    "buildSeconds": 1.93,
+    "startupSeconds": 1.15,
+    "casesSeconds": 0.34,
+    "totalSeconds": 3.42
   },
   "summary": {
     "result": "PASS",
@@ -1619,5 +1619,49 @@
       "implicatedRules": [],
       "pass": true
     }
-  ]
+  ],
+  "seededDefect": {
+    "name": "threshold",
+    "ruleId": "R09",
+    "file": "Rules/R09.cs",
+    "before": "return (claimAmount ?? 0m) > 5000m;",
+    "after": "return (claimAmount ?? 0m) >= 5000m;",
+    "description": "Rule R09's comparison changed from > to >=, so a claim of exactly £5,000 goes to a manager."
+  },
+  "initial": {
+    "summary": {
+      "result": "FAIL",
+      "cases": {
+        "passed": 31,
+        "failed": 1,
+        "total": 32
+      },
+      "rules": {
+        "passed": 10,
+        "failed": 1,
+        "total": 11
+      }
+    },
+    "failedCases": [
+      "R09-02"
+    ],
+    "redRules": [
+      "R09"
+    ]
+  },
+  "repair": {
+    "maxAttempts": 3,
+    "attempts": 1,
+    "fixed": [
+      "R09"
+    ],
+    "unresolved": [],
+    "log": "repairs.json"
+  },
+  "tamperGuard": {
+    "file": "reference-cases.json",
+    "sha256Before": "b275b239cd3e316d078b4e359aadf42e25d5d8c46cd231f5cbaffc15b95fcb82",
+    "sha256After": "b275b239cd3e316d078b4e359aadf42e25d5d8c46cd231f5cbaffc15b95fcb82",
+    "unchanged": true
+  }
 }

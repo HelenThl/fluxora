@@ -14,7 +14,7 @@ React + .NET 8 + Cosmos DB, then proves the migrated app behaves the same, rule 
 | Rebuild | Generator | `generated/api/` (.NET 8 + Cosmos model) and `generated/web/` (React form) |
 | Verify | Judge | `runs/<run-id>/parity.json`, plus `repairs.json` from the bounded repair loop |
 
-> Status: **M4** (fixture, Power Fx oracle, Extractor, Generator, Parity Court). Full run instructions arrive with M7.
+> Status: **M5** (fixture, Power Fx oracle, Extractor, Generator, Parity Court, repair loop). Full run instructions arrive with M7.
 
 ## Setup
 
@@ -103,6 +103,45 @@ What the judge does:
 **Blame on failure.** A failing case blames only the rules that own the field that diverged, narrowed
 to the rules that actually fired. For example, with R09 broken to `>=`, case R09-02 fails on status,
 and only R09 turns red.
+
+### The demo moment: seeded defect and repair
+
+```bash
+fluxora judge 20261108-143433 --seed-defect threshold --offline
+```
+
+What happens:
+
+1. **The defect is seeded in a copy.** The judge always works on a copy of the code in
+   `runs/<run-id>/work/api`, so the committed `generated/` code is never touched. `threshold` changes
+   the one `>` in R09's method body to `>=`. If it doesn't find exactly one match, it stops rather than
+   guess.
+2. **Parity Court goes red** on the £5,000 boundary case (R09-02), and only R09 is blamed.
+3. **The repair agent fixes the rule.** It gets the rule, its C# file, the plain-English sentence and the
+   failing diffs (`prompts/repair_rule.md`), and replies with the full replacement for that one file.
+   The patch is rejected if it:
+   - targets any path other than `Rules/<rule>.cs`
+   - changes the header, class or method signature
+   - special-cases claim or policy IDs
+
+   An accepted patch is applied and the API is rebuilt and re-judged. There are at most 3 attempts per
+   rule; after that the rule is `UNRESOLVED`, never PASS, and the exit code is non-zero.
+4. **Every attempt goes into `repairs.json`** with its unified diff, build result, judge result and an
+   honest mode:
+
+   | mode | source | meaning |
+   |---|---|---|
+   | `live` | `llm-api` | a real LLM call made in this run |
+   | `replay` | `llm-cache` | the committed cached LLM response for this exact prompt |
+   | `replay` | `recorded-patch` | `orchestrator/recorded/repair-R09.json`, used only when no LLM answer exists and the file matches the one the patch was recorded against |
+
+   The committed R09 repair was written in the Claude Code session, with no API call. Its provenance
+   says so.
+5. **Tamper guard.** `reference-cases.json` is hashed before seeding and after the last judgement. Any
+   change fails the run and is recorded in `parity.json` under `tamperGuard`.
+
+`parity.json` holds the final verdict plus `seededDefect`, `initial` (the red summary), `repair` and
+`tamperGuard`, so the red-to-green story is in one file.
 
 ## Layout
 

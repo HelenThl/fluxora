@@ -11,7 +11,7 @@ import typer
 
 from . import generate as rebuild
 from . import judge as verify
-from . import register
+from . import register, repair
 from .extract import ExtractError, build_register
 from .llm import LLMClient, LLMError, get_settings
 
@@ -119,34 +119,93 @@ def generate(
     typer.echo(f"Wrote {len(result.files)} files to {_display(out)}/")
 
 
-@app.command(help="Verify: run the migrated API against every reference case and write runs/<run-id>/parity.json.")
+@app.command(help="Verify: judge the migrated API against every reference case, repair failing rules (max 3 attempts), write parity.json and repairs.json.")
 def judge(
     run_id: str = typer.Argument(..., help="Run ID whose register to judge."),
+    seed_defect: str = typer.Option(None, "--seed-defect", help="Break a rule on purpose in the working copy first. Known: threshold."),
+    offline: bool = typer.Option(False, "--offline", help="Repair only from the committed cache or a recorded patch."),
     port: int = typer.Option(verify.DEFAULT_PORT, "--port", help="Local port for the API under test."),
     api_dir: Path = typer.Option(verify.DEFAULT_API_DIR, "--api-dir", hidden=True),
     runs_dir: Path = typer.Option(DEFAULT_RUNS, "--runs-dir", hidden=True),
+    recorded_dir: Path = typer.Option(repair.RECORDED_DIR, "--recorded-dir", hidden=True),
 ) -> None:
     path = register.rules_path(runs_dir, run_id)
     if not path.is_file():
         _fail(f"No register for run {run_id} at {path}")
     data = register.load(path)
-    typer.echo(f"Verify: Parity Court for run {run_id}")
+    client = LLMClient(get_settings(offline=offline), log=lambda _: None)
+    typer.echo(f"Verify: Parity Court for run {run_id}  [repair LLM: {client.mode}]")
+
+    def on_verdict(stage: str, verdict) -> None:
+        if stage == "initial":
+            _print_court(verdict.parity, "PARITY COURT", "VERDICT" if verdict.passed else "Initial verdict")
+
     try:
-        verdict = verify.judge(data, api_dir=api_dir, port=port, work_dir=path.parent / "work", root=ROOT, log=typer.echo)
-    except verify.JudgeError as e:
+        result = repair.run_court(
+            data,
+            run_dir=path.parent,
+            client=client,
+            seed=seed_defect,
+            port=port,
+            source_api=api_dir,
+            recorded_dir=recorded_dir,
+            root=ROOT,
+            log=lambda m: typer.echo(m) if not m.startswith("  ") else None,
+            on_verdict=on_verdict,
+            on_attempt=_print_attempt,
+        )
+    except (verify.JudgeError, repair.RepairError) as e:
         _fail(str(e))
-    parity_path = path.parent / "parity.json"
-    verify.write_parity(verdict, parity_path)
-    _print_court(verdict.parity)
-    typer.echo(f"\nWrote {_display(parity_path)}")
-    raise typer.Exit(0 if verdict.passed else 1)
+
+    if result.attempts:
+        _print_court(result.parity, "PARITY COURT  (after repair)", "Final verdict")
+    guard = result.parity["tamperGuard"]
+    if not guard["unchanged"]:
+        typer.secho(f"TAMPER GUARD: {guard['message']}", fg=typer.colors.RED, bold=True)
+    fix = result.parity["repair"]
+    if fix["fixed"]:
+        sources = sorted({_mode_label(a) for a in result.attempts if a["outcome"] == "fixed"})
+        typer.secho(
+            f"Repaired {', '.join(fix['fixed'])} in {fix['attempts']} attempt(s) ({'; '.join(sources)}).",
+            fg=typer.colors.GREEN,
+        )
+    if fix["unresolved"]:
+        typer.secho(f"UNRESOLVED after {fix['maxAttempts']} attempts: {', '.join(fix['unresolved'])}", fg=typer.colors.RED, bold=True)
+    typer.echo(f"\nWrote {_display(path.parent / 'parity.json')} and {_display(path.parent / 'repairs.json')}")
+    raise typer.Exit(0 if result.passed else 1)
 
 
-def _print_court(parity: dict) -> None:
-    colours = {"PASS": typer.colors.GREEN, "FAIL": typer.colors.RED, "NO CASES": typer.colors.YELLOW}
+def _mode_label(attempt: dict) -> str:
+    return {
+        "llm-api": "live LLM call",
+        "llm-cache": "replay: cached LLM response",
+        "recorded-patch": "replay: recorded patch",
+    }.get(attempt.get("source"), attempt.get("source", "?"))
+
+
+def _print_attempt(attempt: dict) -> None:
+    typer.echo("")
+    typer.secho(
+        f"REPAIR  {attempt['ruleId']}  attempt {attempt['attempt']}/{repair.MAX_ATTEMPTS}  [{_mode_label(attempt)}]",
+        bold=True,
+    )
+    for line in (attempt.get("diff") or "").splitlines():
+        if line.startswith(("+++", "---", "@@")):
+            continue
+        colour = typer.colors.GREEN if line.startswith("+") else typer.colors.RED if line.startswith("-") else None
+        if colour:
+            typer.secho(f"  {line.rstrip()}", fg=colour)
+    outcome = attempt["outcome"]
+    judged = attempt.get("judge")
+    detail = f"  cases {judged['casesPassed']}/{judged['casesTotal']}" if judged else f"  {attempt.get('detail', '')[:200]}"
+    typer.secho(f"  -> {outcome}{detail}", fg=typer.colors.GREEN if outcome == "fixed" else typer.colors.RED)
+
+
+def _print_court(parity: dict, heading: str = "PARITY COURT", verdict_label: str = "VERDICT") -> None:
+    colours = {"PASS": typer.colors.GREEN, "FAIL": typer.colors.RED, "UNRESOLVED": typer.colors.RED, "NO CASES": typer.colors.YELLOW}
     ref = parity["referenceCases"]
     typer.echo("")
-    typer.secho(f"PARITY COURT  -  run {parity['runId']}", bold=True)
+    typer.secho(f"{heading}  -  run {parity['runId']}", bold=True)
     typer.echo(
         f"Reference cases: {ref['path']}  sha256 {ref['sha256Before'][:12]}  "
         + ("(unchanged)" if ref["unchanged"] else "(CHANGED DURING THE RUN)")
@@ -174,7 +233,7 @@ def _print_court(parity: dict) -> None:
         f"Cases {s['cases']['passed']}/{s['cases']['total']} pass   Rules {s['rules']['passed']}/{s['rules']['total']} pass   "
         f"Time: build {t['buildSeconds']}s, start {t['startupSeconds']}s, cases {t['casesSeconds']}s"
     )
-    typer.secho(f"VERDICT: {s['result']}", fg=colours[s["result"]], bold=True)
+    typer.secho(f"{verdict_label.upper()}: {s['result']}", fg=colours[s["result"]], bold=True)
 
 
 def _display(path: Path) -> str:
