@@ -50,6 +50,13 @@ def sha256_file(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def port_in_use_message(port: int) -> str:
+    return (
+        f"Port {port} is already in use (perhaps a `dotnet run --project generated/api` left open). Stop it, or pick "
+        f"another port with --port, e.g. `--port {port + 10}`. The judge only tests an API it started itself."
+    )
+
+
 def port_in_use(port: int) -> bool:
     try:
         with socket.create_connection(("127.0.0.1", port), timeout=0.5):
@@ -83,10 +90,7 @@ def judge(
     built = time.perf_counter()
 
     if port_in_use(port):
-        raise JudgeError(
-            f"Port {port} is already in use. Stop whatever is listening there; "
-            "the judge only tests an API it started itself."
-        )
+        raise JudgeError(port_in_use_message(port))
     url = f"http://127.0.0.1:{port}"
     work_dir.mkdir(parents=True, exist_ok=True)
     log_path = work_dir / "api.log"

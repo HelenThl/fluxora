@@ -51,6 +51,20 @@ def test_demo_labels_every_stage_honestly(demo):
     assert "| Rebuild: generate |" in evidence and "| Total |" in evidence and "cached LLM" in evidence
 
 
+def test_busy_port_stops_the_demo_before_any_work(tmp_path):
+    import socket
+
+    runs_dir = tmp_path / "runs"
+    with socket.socket() as blocker:
+        blocker.bind(("127.0.0.1", 0))
+        blocker.listen()
+        port = blocker.getsockname()[1]
+        result = CliRunner().invoke(app, ["demo", "--offline", "--port", str(port), "--runs-dir", str(runs_dir)])
+    assert result.exit_code != 0
+    assert f"Port {port} is already in use" in result.output and "--port" in result.output
+    assert not runs_dir.exists()  # nothing was extracted or generated
+
+
 def test_demo_leaves_committed_code_and_cases_alone(demo):
     _, run_dir = demo
     assert (run_dir / "generated" / "manifest.json").is_file()

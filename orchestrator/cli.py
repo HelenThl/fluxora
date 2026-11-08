@@ -137,6 +137,8 @@ def judge(
     if not path.is_file():
         _fail(f"No register for run {run_id} at {path}")
     data = register.load(path)
+    if verify.port_in_use(port):
+        _fail(verify.port_in_use_message(port))
     client = LLMClient(get_settings(offline=offline), log=lambda _: None)
     typer.echo(f"Verify: Parity Court for run {run_id}  [repair LLM: {client.mode}]")
 
@@ -224,6 +226,11 @@ def demo(
     runs_dir: Path = typer.Option(DEFAULT_RUNS, "--runs-dir", hidden=True),
 ) -> None:
     fixture = ROOT / "fixtures" / "claim-triage"
+    # Fail before any work if the two things the Verify stages need are missing.
+    if verify.port_in_use(port):
+        _fail(verify.port_in_use_message(port))
+    if shutil.which("dotnet") is None:
+        _fail(verify.NO_DOTNET)
     client = LLMClient(get_settings(offline=offline), log=lambda _: None)
     stages: list[dict] = []
     demo_start = time.perf_counter()
