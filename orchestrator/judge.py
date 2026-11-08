@@ -28,6 +28,11 @@ CASES_FILE = "reference-cases.json"
 FIELDS = ("errors", "excess", "payable", "lateReport", "status")
 OUTPUT_FIELDS = {"Errors": "errors", "Excess": "excess", "Payable": "payable", "LateReport": "lateReport", "Status": "status"}
 HEALTH_TIMEOUT_SECONDS = 60
+BUILD_TIMEOUT_SECONDS = 300
+NO_DOTNET = (
+    "The .NET 8 SDK was not found: `dotnet` is not on PATH. Install the .NET 8 SDK "
+    "(https://dotnet.microsoft.com/download/dotnet/8.0), open a new terminal, and check with `dotnet --list-sdks`."
+)
 _MISSING = object()
 
 
@@ -87,9 +92,12 @@ def judge(
     log_path = work_dir / "api.log"
     with open(log_path, "wb") as api_log:
         log(f"  start: {dll.name} on {url}")
-        process = subprocess.Popen(
-            ["dotnet", str(dll), "--urls", url], cwd=dll.parent, stdout=api_log, stderr=subprocess.STDOUT
-        )
+        try:
+            process = subprocess.Popen(
+                ["dotnet", str(dll), "--urls", url], cwd=dll.parent, stdout=api_log, stderr=subprocess.STDOUT
+            )
+        except FileNotFoundError:
+            raise JudgeError(NO_DOTNET) from None
         try:
             _wait_until_healthy(url, process, log_path)
             ready = time.perf_counter()
@@ -146,17 +154,29 @@ def _build(api_dir: Path) -> Path:
     projects = sorted(api_dir.glob("*.csproj"))
     if len(projects) != 1:
         raise JudgeError(f"Expected one .csproj in {api_dir}, found {len(projects)}.")
-    result = subprocess.run(
-        ["dotnet", "build", str(projects[0]), "-nologo", "-v", "q", "-clp:NoSummary"],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
+    try:
+        result = subprocess.run(
+            ["dotnet", "build", str(projects[0]), "-nologo", "-v", "q", "-clp:NoSummary"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=BUILD_TIMEOUT_SECONDS,
+        )
+    except FileNotFoundError:
+        raise JudgeError(NO_DOTNET) from None
+    except subprocess.TimeoutExpired:
+        raise JudgeError(
+            f"dotnet build did not finish within {BUILD_TIMEOUT_SECONDS}s. The first build downloads NuGet packages; "
+            "check the network, or run `dotnet build generated/api` once beforehand so later builds work offline."
+        ) from None
     if result.returncode != 0:
         lines = [l for l in (result.stdout + result.stderr).splitlines() if "error" in l.lower()]
         detail = "\n".join(dict.fromkeys(lines)) or (result.stdout + result.stderr)[-2000:]
-        raise JudgeError(f"dotnet build failed:\n{detail}")
+        hint = ""
+        if any(code in detail for code in ("NU1101", "NU1301", "NU1102")):
+            hint = "\nNuGet packages could not be restored. The first build needs network access to nuget.org."
+        raise JudgeError(f"dotnet build failed:\n{detail}{hint}")
     dll = api_dir / "bin" / "Debug" / "net8.0" / f"{projects[0].stem}.dll"
     if not dll.is_file():
         raise JudgeError(f"Build succeeded but {dll} is missing.")

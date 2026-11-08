@@ -87,6 +87,17 @@ def test_build_failure_is_reported_and_nothing_keeps_running(tmp_path):
     assert not port_in_use(PORT)
 
 
+def test_missing_dotnet_gives_a_clear_error_not_a_traceback(tmp_path, monkeypatch):
+    import orchestrator.judge as judge_module
+
+    def no_dotnet(*args, **kwargs):
+        raise FileNotFoundError(2, "The system cannot find the file specified")
+
+    monkeypatch.setattr(judge_module.subprocess, "run", no_dotnet)
+    with pytest.raises(JudgeError, match=r"\.NET 8 SDK was not found"):
+        judge(register.load(COMMITTED_RUN), port=PORT, work_dir=tmp_path / "work", log=lambda _: None)
+
+
 def test_cli_writes_parity_and_exits_zero_when_green(tmp_path):
     runs_dir = tmp_path / "runs"
     (runs_dir / RUN_ID).mkdir(parents=True)
