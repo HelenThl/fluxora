@@ -14,7 +14,7 @@ React + .NET 8 + Cosmos DB, then proves the migrated app behaves the same, rule 
 | Rebuild | Generator | `generated/api/` (.NET 8 + Cosmos model) and `generated/web/` (React form) |
 | Verify | Judge | `runs/<run-id>/parity.json`, plus `repairs.json` from the bounded repair loop |
 
-> Status: **M5** (fixture, Power Fx oracle, Extractor, Generator, Parity Court, repair loop). Full run instructions arrive with M7.
+> Status: **M6** (pipeline, Parity Court with repair, dashboard and evidence page). Full run instructions arrive with M7.
 
 ## Setup
 
@@ -142,6 +142,32 @@ What happens:
 
 `parity.json` holds the final verdict plus `seededDefect`, `initial` (the red summary), `repair` and
 `tamperGuard`, so the red-to-green story is in one file.
+
+## Dashboard and evidence
+
+```bash
+cd dashboard && npm install && npm run build && cd ..
+fluxora serve 20261108-143433        # open http://127.0.0.1:8765/
+fluxora evidence 20261108-143433     # writes runs/20261108-143433/evidence.md
+```
+
+The dashboard has three views, named after the tagline:
+
+- **Transform:** the Rule Register (ID, plain-English rule, formula, source, confidence and status)
+  with Approve and Reject per rule and an "Approve all" button. Each decision is written to
+  `rules.json` with a UTC timestamp. Below it, the unsupported items and their reasons.
+- **Rebuild:** the generated files, grouped as `api/Rules`, `api/Data`, other API files and `web`.
+  Each rule file links back to its rule and can show its source.
+- **Verify:** the Parity Court grid of rules by reference cases. Each case says PASS or FAIL and
+  carries its oracle label, and a "Before repair / After repair" switch tells the seeded-defect story.
+  Click a case to see expected against actual. Below the grid are the repair attempts, with diff, mode
+  and provenance, then the evidence summary: approvals, repairs, unsupported items, oracle coverage,
+  tamper guard, measured timings and data notes.
+
+`fluxora serve` is a small Python standard-library server. It listens on 127.0.0.1 only and accepts
+approvals from this machine only. It serves only the built dashboard, the run's JSON files, and the
+generated files listed in `generated/manifest.json`. Text is sized for a projector, and status is
+always written as words (PASS, FAIL, APPROVED), never shown by colour alone.
 
 ## Layout
 

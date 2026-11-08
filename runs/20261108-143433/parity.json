@@ -1,6 +1,6 @@
 {
   "runId": "20261108-143433",
-  "judgedAt": "2026-11-08T15:05:44Z",
+  "judgedAt": "2026-11-08T15:13:01Z",
   "api": {
     "project": "runs/20261108-143433/work/api",
     "url": "http://127.0.0.1:5080"
@@ -12,10 +12,10 @@
     "unchanged": true
   },
   "timings": {
-    "buildSeconds": 1.93,
-    "startupSeconds": 1.15,
-    "casesSeconds": 0.34,
-    "totalSeconds": 3.42
+    "buildSeconds": 4.2,
+    "startupSeconds": 1.2,
+    "casesSeconds": 0.62,
+    "totalSeconds": 6.02
   },
   "summary": {
     "result": "PASS",
@@ -1647,6 +1647,120 @@
     ],
     "redRules": [
       "R09"
+    ],
+    "rules": [
+      {
+        "id": "R01",
+        "status": "PASS",
+        "failedCases": []
+      },
+      {
+        "id": "R02",
+        "status": "PASS",
+        "failedCases": []
+      },
+      {
+        "id": "R03",
+        "status": "PASS",
+        "failedCases": []
+      },
+      {
+        "id": "R04",
+        "status": "PASS",
+        "failedCases": []
+      },
+      {
+        "id": "R05",
+        "status": "PASS",
+        "failedCases": []
+      },
+      {
+        "id": "R06",
+        "status": "PASS",
+        "failedCases": []
+      },
+      {
+        "id": "R07",
+        "status": "PASS",
+        "failedCases": []
+      },
+      {
+        "id": "R08",
+        "status": "PASS",
+        "failedCases": []
+      },
+      {
+        "id": "R09",
+        "status": "FAIL",
+        "failedCases": [
+          "R09-02"
+        ]
+      },
+      {
+        "id": "R10",
+        "status": "PASS",
+        "failedCases": []
+      },
+      {
+        "id": "R11",
+        "status": "PASS",
+        "failedCases": []
+      }
+    ],
+    "cases": [
+      {
+        "id": "R09-02",
+        "ruleIds": [
+          "R05",
+          "R06",
+          "R09",
+          "R11"
+        ],
+        "description": "Exactly 5000 is not over the threshold. This is the case the seeded defect (> to >=) breaks.",
+        "oracle": "powerfx-engine",
+        "inputs": {
+          "claimId": "CLM-000124",
+          "policyNumber": "POL-000125",
+          "claimType": "Home",
+          "policyStartDate": "2026-01-01",
+          "incidentDate": "2026-10-01",
+          "reportedDate": "2026-10-05",
+          "claimAmount": 5000.0,
+          "hasReceipt": false,
+          "status": null,
+          "today": "2026-11-09"
+        },
+        "expected": {
+          "errors": [],
+          "excess": 350.0,
+          "payable": 4650.0,
+          "lateReport": false,
+          "status": "Approved"
+        },
+        "actual": {
+          "errors": [],
+          "messages": [],
+          "excess": 350,
+          "payable": 4650.0,
+          "lateReport": false,
+          "status": "Pending approval",
+          "firedRules": [
+            "R05",
+            "R06",
+            "R09"
+          ]
+        },
+        "diff": {
+          "status": {
+            "expected": "Approved",
+            "actual": "Pending approval"
+          }
+        },
+        "implicatedRules": [
+          "R09"
+        ],
+        "pass": false
+      }
     ]
   },
   "repair": {

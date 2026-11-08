@@ -11,7 +11,8 @@ import typer
 
 from . import generate as rebuild
 from . import judge as verify
-from . import register, repair
+from . import register, repair, serve as dashboard
+from .evidence import write_evidence
 from .extract import ExtractError, build_register
 from .llm import LLMClient, LLMError, get_settings
 
@@ -173,6 +174,43 @@ def judge(
         typer.secho(f"UNRESOLVED after {fix['maxAttempts']} attempts: {', '.join(fix['unresolved'])}", fg=typer.colors.RED, bold=True)
     typer.echo(f"\nWrote {_display(path.parent / 'parity.json')} and {_display(path.parent / 'repairs.json')}")
     raise typer.Exit(0 if result.passed else 1)
+
+
+@app.command(help="Verify: write runs/<run-id>/evidence.md (register, approvals, parity, repairs, unsupported items, oracle coverage, timings).")
+def evidence(
+    run_id: str = typer.Argument(..., help="Run ID to write the evidence page for."),
+    runs_dir: Path = typer.Option(DEFAULT_RUNS, "--runs-dir", hidden=True),
+) -> None:
+    run_dir = runs_dir / run_id
+    if not (run_dir / register.RULES_FILE).is_file():
+        _fail(f"No register for run {run_id} at {run_dir}")
+    path = write_evidence(run_dir, ROOT)
+    typer.echo(f"Wrote {_display(path)}")
+
+
+@app.command(help="Open the dashboard (Transform / Rebuild / Verify) for a run on http://127.0.0.1:8765.")
+def serve(
+    run_id: str = typer.Argument(None, help="Run ID to show (default: the latest run)."),
+    port: int = typer.Option(dashboard.DEFAULT_PORT, "--port", help="Local port for the dashboard."),
+    runs_dir: Path = typer.Option(DEFAULT_RUNS, "--runs-dir", hidden=True),
+) -> None:
+    run_id = run_id or dashboard.latest_run(runs_dir)
+    if not run_id or not (runs_dir / run_id / register.RULES_FILE).is_file():
+        _fail(f"No run to show{f' ({run_id})' if run_id else ''}. Run `fluxora extract` first.")
+    if not (dashboard.DASHBOARD_DIST / "index.html").is_file():
+        typer.secho("Dashboard not built yet: cd dashboard && npm install && npm run build", fg=typer.colors.YELLOW)
+    try:
+        server = dashboard.make_server(runs_dir / run_id, port=port, root=ROOT)
+    except OSError as e:
+        _fail(f"Could not listen on 127.0.0.1:{port}: {e}")
+    typer.secho(f"Fluxora dashboard for run {run_id}: http://127.0.0.1:{port}/", bold=True)
+    typer.echo("Transform. Rebuild. Verify.  (Ctrl+C to stop)")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        typer.echo("\nStopped.")
+    finally:
+        server.server_close()
 
 
 def _mode_label(attempt: dict) -> str:

@@ -38,14 +38,17 @@ def save(path: Path, data: dict) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def approve(data: dict, *, approve_all: bool, reject: list[str]) -> list[dict]:
-    """Record decisions: rejected IDs become "rejected"; with approve_all, every other rule becomes
-    "approved". Each decision is appended to data["approvals"] with an ISO timestamp."""
+def approve(data: dict, *, approve_all: bool, reject: list[str], approve: list[str] | None = None) -> list[dict]:
+    """Record decisions: rejected IDs become "rejected"; IDs in `approve` (or, with approve_all, every
+    other rule) become "approved". Each decision is appended to data["approvals"] with an ISO timestamp."""
+    approve = approve or []
     ids = [r["id"] for r in data["rules"]]
-    unknown = [r for r in reject if r not in ids]
+    unknown = [r for r in reject + approve if r not in ids]
     if unknown:
         raise ValueError(f"Unknown rule ID(s): {', '.join(unknown)}. The register has {ids[0]}..{ids[-1]}.")
-    if not approve_all and not reject:
+    if set(reject) & set(approve):
+        raise ValueError(f"A rule cannot be approved and rejected at once: {', '.join(sorted(set(reject) & set(approve)))}.")
+    if not approve_all and not reject and not approve:
         raise ValueError("Nothing to do: pass --all, --reject, or both.")
 
     at = now_iso()
@@ -53,7 +56,7 @@ def approve(data: dict, *, approve_all: bool, reject: list[str]) -> list[dict]:
     for rule in data["rules"]:
         if rule["id"] in reject:
             decision = "rejected"
-        elif approve_all:
+        elif approve_all or rule["id"] in approve:
             decision = "approved"
         else:
             continue

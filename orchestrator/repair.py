@@ -354,6 +354,8 @@ def run_court(
         "summary": first.parity["summary"],
         "failedCases": sorted(_failed_ids(first)),
         "redRules": [r["id"] for r in first.parity["rules"] if r["status"] == "FAIL"],
+        "rules": [{"id": r["id"], "status": r["status"], "failedCases": r["failedCases"]} for r in first.parity["rules"]],
+        "cases": [c for c in first.parity["cases"] if not c["pass"]],
     }
     parity["repair"] = {"maxAttempts": max_attempts, "attempts": len(attempts), "fixed": fixed, "unresolved": unresolved, "log": "repairs.json"}
     parity["tamperGuard"] = tamper
