@@ -24,7 +24,7 @@
       "id": "R01-01",
       "ruleIds": ["R01"],
       "description": "Zero amount is rejected.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000101", "policyNumber": "POL-000123", "claimType": "Motor", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 0.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": ["R01"], "excess": null, "payable": null, "lateReport": null, "status": null }
     },
@@ -32,7 +32,7 @@
       "id": "R01-02",
       "ruleIds": ["R01"],
       "description": "Blank amount is rejected.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000102", "policyNumber": "POL-000123", "claimType": "Motor", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": null, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": ["R01"], "excess": null, "payable": null, "lateReport": null, "status": null }
     },
@@ -40,7 +40,7 @@
       "id": "R01-03",
       "ruleIds": ["R01", "R05", "R06", "R07"],
       "description": "Smallest positive amount passes R01, then falls below the Motor excess.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000103", "policyNumber": "POL-000123", "claimType": "Motor", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 0.01, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 250.00, "payable": 0.00, "lateReport": false, "status": "Below excess" }
     },
@@ -48,7 +48,7 @@
       "id": "R02-01",
       "ruleIds": ["R02"],
       "description": "Unknown claim type is rejected.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000104", "policyNumber": "POL-000123", "claimType": "Boat", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 1000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": ["R02"], "excess": null, "payable": null, "lateReport": null, "status": null }
     },
@@ -56,7 +56,7 @@
       "id": "R02-02",
       "ruleIds": ["R02"],
       "description": "Blank claim type is rejected.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000105", "policyNumber": "POL-000123", "claimType": null, "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 1000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": ["R02"], "excess": null, "payable": null, "lateReport": null, "status": null }
     },
@@ -64,7 +64,7 @@
       "id": "R03-01",
       "ruleIds": ["R03", "R05", "R06", "R11"],
       "description": "Incident date equal to today is allowed.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000106", "policyNumber": "POL-000123", "claimType": "Motor", "policyStartDate": "2026-01-01", "incidentDate": "2026-11-09", "reportedDate": "2026-11-09", "claimAmount": 1000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 250.00, "payable": 750.00, "lateReport": false, "status": "Approved" }
     },
@@ -72,7 +72,7 @@
       "id": "R03-02",
       "ruleIds": ["R03"],
       "description": "Incident date one day after today is rejected.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000107", "policyNumber": "POL-000123", "claimType": "Motor", "policyStartDate": "2026-01-01", "incidentDate": "2026-11-10", "reportedDate": "2026-11-10", "claimAmount": 1000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": ["R03"], "excess": null, "payable": null, "lateReport": null, "status": null }
     },
@@ -80,7 +80,7 @@
       "id": "R04-01",
       "ruleIds": ["R04", "R05", "R06"],
       "description": "Incident one day before the policy starts is not covered.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000108", "policyNumber": "POL-000124", "claimType": "Motor", "policyStartDate": "2026-03-01", "incidentDate": "2026-02-28", "reportedDate": "2026-03-02", "claimAmount": 1000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 250.00, "payable": 750.00, "lateReport": false, "status": "Not covered" }
     },
@@ -88,7 +88,7 @@
       "id": "R04-02",
       "ruleIds": ["R04", "R05", "R06", "R11"],
       "description": "Incident on the policy start date is covered.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000109", "policyNumber": "POL-000124", "claimType": "Motor", "policyStartDate": "2026-03-01", "incidentDate": "2026-03-01", "reportedDate": "2026-03-02", "claimAmount": 1000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 250.00, "payable": 750.00, "lateReport": false, "status": "Approved" }
     },
@@ -96,7 +96,7 @@
       "id": "R04-03",
       "ruleIds": ["R04", "R05", "R06", "R09", "R10"],
       "description": "Precedence: not covered beats a late report (59 days) and an amount over 5000. LateReport is still set.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000110", "policyNumber": "POL-000124", "claimType": "Motor", "policyStartDate": "2026-03-01", "incidentDate": "2026-02-01", "reportedDate": "2026-04-01", "claimAmount": 6000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 250.00, "payable": 5750.00, "lateReport": true, "status": "Not covered" }
     },
@@ -104,7 +104,7 @@
       "id": "R05-01",
       "ruleIds": ["R05", "R06", "R11"],
       "description": "Motor excess is 250.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000111", "policyNumber": "POL-000123", "claimType": "Motor", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 1000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 250.00, "payable": 750.00, "lateReport": false, "status": "Approved" }
     },
@@ -112,7 +112,7 @@
       "id": "R05-02",
       "ruleIds": ["R05", "R06", "R11"],
       "description": "Home excess is 350.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000112", "policyNumber": "POL-000125", "claimType": "Home", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 1000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 350.00, "payable": 650.00, "lateReport": false, "status": "Approved" }
     },
@@ -120,7 +120,7 @@
       "id": "R05-03",
       "ruleIds": ["R05", "R06", "R11"],
       "description": "Travel excess is 100.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000113", "policyNumber": "POL-000126", "claimType": "Travel", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 1000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 100.00, "payable": 900.00, "lateReport": false, "status": "Approved" }
     },
@@ -128,7 +128,7 @@
       "id": "R06-01",
       "ruleIds": ["R05", "R06", "R11"],
       "description": "Payable keeps pence: 1200.50 - 350.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000114", "policyNumber": "POL-000125", "claimType": "Home", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 1200.50, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 350.00, "payable": 850.50, "lateReport": false, "status": "Approved" }
     },
@@ -136,7 +136,7 @@
       "id": "R06-02",
       "ruleIds": ["R05", "R06", "R07"],
       "description": "Payable never goes negative: 60 - 100 clamps to 0.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000115", "policyNumber": "POL-000126", "claimType": "Travel", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 60.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 100.00, "payable": 0.00, "lateReport": false, "status": "Below excess" }
     },
@@ -144,7 +144,7 @@
       "id": "R07-01",
       "ruleIds": ["R05", "R06", "R07"],
       "description": "Amount equal to the excess is below excess.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000116", "policyNumber": "POL-000123", "claimType": "Motor", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 250.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 250.00, "payable": 0.00, "lateReport": false, "status": "Below excess" }
     },
@@ -152,7 +152,7 @@
       "id": "R07-02",
       "ruleIds": ["R05", "R06", "R07", "R11"],
       "description": "Amount one penny above the excess is approved.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000117", "policyNumber": "POL-000123", "claimType": "Motor", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 250.01, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 250.00, "payable": 0.01, "lateReport": false, "status": "Approved" }
     },
@@ -160,7 +160,7 @@
       "id": "R07-03",
       "ruleIds": ["R05", "R06", "R07", "R10"],
       "description": "Precedence: below excess beats a late report (44 days). LateReport is still set.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000118", "policyNumber": "POL-000126", "claimType": "Travel", "policyStartDate": "2026-01-01", "incidentDate": "2026-09-01", "reportedDate": "2026-10-15", "claimAmount": 100.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 100.00, "payable": 0.00, "lateReport": true, "status": "Below excess" }
     },
@@ -168,7 +168,7 @@
       "id": "R08-01",
       "ruleIds": ["R05", "R06", "R08", "R11"],
       "description": "Travel at exactly 2000 without a receipt is allowed.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000119", "policyNumber": "POL-000126", "claimType": "Travel", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 2000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 100.00, "payable": 1900.00, "lateReport": false, "status": "Approved" }
     },
@@ -176,7 +176,7 @@
       "id": "R08-02",
       "ruleIds": ["R05", "R06", "R08", "R11"],
       "description": "Travel at exactly 2000 with a receipt is allowed.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000120", "policyNumber": "POL-000126", "claimType": "Travel", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 2000.00, "hasReceipt": true, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 100.00, "payable": 1900.00, "lateReport": false, "status": "Approved" }
     },
@@ -184,7 +184,7 @@
       "id": "R08-03",
       "ruleIds": ["R08"],
       "description": "Travel at 2000.01 without a receipt is rejected.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000121", "policyNumber": "POL-000126", "claimType": "Travel", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 2000.01, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": ["R08"], "excess": null, "payable": null, "lateReport": null, "status": null }
     },
@@ -192,7 +192,7 @@
       "id": "R08-04",
       "ruleIds": ["R05", "R06", "R08", "R11"],
       "description": "Travel at 2000.01 with a receipt is allowed.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000122", "policyNumber": "POL-000126", "claimType": "Travel", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 2000.01, "hasReceipt": true, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 100.00, "payable": 1900.01, "lateReport": false, "status": "Approved" }
     },
@@ -200,7 +200,7 @@
       "id": "R09-01",
       "ruleIds": ["R05", "R06", "R09", "R11"],
       "description": "4999.99 stays under the manager threshold.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000123", "policyNumber": "POL-000125", "claimType": "Home", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 4999.99, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 350.00, "payable": 4649.99, "lateReport": false, "status": "Approved" }
     },
@@ -208,7 +208,7 @@
       "id": "R09-02",
       "ruleIds": ["R05", "R06", "R09", "R11"],
       "description": "Exactly 5000 is not over the threshold. This is the case the seeded defect (> to >=) breaks.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000124", "policyNumber": "POL-000125", "claimType": "Home", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 5000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 350.00, "payable": 4650.00, "lateReport": false, "status": "Approved" }
     },
@@ -216,7 +216,7 @@
       "id": "R09-03",
       "ruleIds": ["R05", "R06", "R09"],
       "description": "5000.01 goes to a manager.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000125", "policyNumber": "POL-000125", "claimType": "Home", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 5000.01, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 350.00, "payable": 4650.01, "lateReport": false, "status": "Pending approval" }
     },
@@ -224,7 +224,7 @@
       "id": "R10-01",
       "ruleIds": ["R05", "R06", "R10", "R11"],
       "description": "Reported 30 days after the incident is on time.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000126", "policyNumber": "POL-000123", "claimType": "Motor", "policyStartDate": "2026-01-01", "incidentDate": "2026-09-01", "reportedDate": "2026-10-01", "claimAmount": 1000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 250.00, "payable": 750.00, "lateReport": false, "status": "Approved" }
     },
@@ -232,7 +232,7 @@
       "id": "R10-02",
       "ruleIds": ["R05", "R06", "R10"],
       "description": "Reported 31 days after the incident is late.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000127", "policyNumber": "POL-000123", "claimType": "Motor", "policyStartDate": "2026-01-01", "incidentDate": "2026-09-01", "reportedDate": "2026-10-02", "claimAmount": 1000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 250.00, "payable": 750.00, "lateReport": true, "status": "Manual review" }
     },
@@ -240,7 +240,7 @@
       "id": "R10-03",
       "ruleIds": ["R05", "R06", "R09", "R10"],
       "description": "Precedence: a late report beats an amount over 5000.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000128", "policyNumber": "POL-000123", "claimType": "Motor", "policyStartDate": "2026-01-01", "incidentDate": "2026-09-01", "reportedDate": "2026-10-02", "claimAmount": 6000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 250.00, "payable": 5750.00, "lateReport": true, "status": "Manual review" }
     },
@@ -248,7 +248,7 @@
       "id": "R11-01",
       "ruleIds": ["R05", "R06", "R11"],
       "description": "Plain Home claim is approved.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000129", "policyNumber": "POL-000125", "claimType": "Home", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 800.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 350.00, "payable": 450.00, "lateReport": false, "status": "Approved" }
     },
@@ -256,7 +256,7 @@
       "id": "R11-02",
       "ruleIds": ["R05", "R06", "R11"],
       "description": "Plain Motor claim is approved.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000130", "policyNumber": "POL-000123", "claimType": "Motor", "policyStartDate": "2026-01-01", "incidentDate": "2026-10-01", "reportedDate": "2026-10-05", "claimAmount": 3000.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": [], "excess": 250.00, "payable": 2750.00, "lateReport": false, "status": "Approved" }
     },
@@ -264,7 +264,7 @@
       "id": "VAL-01",
       "ruleIds": ["R01", "R02", "R03"],
       "description": "Several validation failures at once are all reported, in rule order.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000131", "policyNumber": "POL-000123", "claimType": "Boat", "policyStartDate": "2026-01-01", "incidentDate": "2026-11-20", "reportedDate": "2026-11-20", "claimAmount": 0.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": ["R01", "R02", "R03"], "excess": null, "payable": null, "lateReport": null, "status": null }
     },
@@ -272,7 +272,7 @@
       "id": "VAL-02",
       "ruleIds": ["R03", "R08"],
       "description": "Future incident and missing receipt are both reported.",
-      "oracle": "manual",
+      "oracle": "powerfx-engine",
       "inputs": { "claimId": "CLM-000132", "policyNumber": "POL-000126", "claimType": "Travel", "policyStartDate": "2026-01-01", "incidentDate": "2026-11-10", "reportedDate": "2026-11-10", "claimAmount": 2500.00, "hasReceipt": false, "status": null, "today": "2026-11-09" },
       "expected": { "errors": ["R03", "R08"], "excess": null, "payable": null, "lateReport": null, "status": null }
     }

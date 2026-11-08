@@ -14,7 +14,7 @@ React + .NET 8 + Cosmos DB, then proves the migrated app behaves the same, rule 
 | Rebuild | Generator | `generated/api/` (.NET 8 + Cosmos model) and `generated/web/` (React form) |
 | Verify | Judge | `runs/<run-id>/parity.json`, plus `repairs.json` from the bounded repair loop |
 
-> Status: **M0** (scaffold + fixture). Run instructions arrive with M7.
+> Status: **M1** (scaffold, fixture, Power Fx oracle). Run instructions arrive with M7.
 
 ## Layout
 
@@ -49,3 +49,30 @@ Check the fixture:
 ```bash
 python scripts/check_fixture.py
 ```
+
+## Oracle
+
+The expected values in `reference-cases.json` are checked by Microsoft's open-source Power Fx
+engine (`Microsoft.PowerFx.Interpreter` 1.8.1), running the original formulas in `oracle/`:
+
+```bash
+dotnet run --project oracle -- fixtures/claim-triage/reference-cases.json
+```
+
+It prints every case and field with the hand-written value next to the engine's value. With
+`--write`, it labels a case `powerfx-engine` only if the engine produced every field and all of them
+matched. If anything differs, it writes nothing and stops, so a person decides which side is wrong.
+
+**Rules the engine evaluates for real:** all eleven, R01 to R11.
+
+- **R01–R08**: evaluated verbatim from the `App.Formulas` block in `app.pa.yaml`.
+- **R09, R10**: the flow stores these as Logic Apps expressions, which aren't Power Fx, so the engine runs the Power Fx versions from the CLAUDE.md rule table. R10 uses `TimeUnit.Days`, because the engine rejects the bare `Days` that the table uses.
+- **R11 and status precedence**: no single formula in the app holds these, so the oracle encodes the CLAUDE.md order as one Power Fx `If(...)` chain built from the rule formulas.
+- **`Today()`**: reads a fixed clock set from each case's `today`.
+
+**Labels:** all 32 cases matched on every field (160 of 160 values), so all are labelled
+`powerfx-engine`. None stay `manual`.
+
+**What this does not prove:**
+- The precedence chain, the R09/R10 Power Fx versions, and the `errors[]`/`null` output convention are our own encoding. The engine checks the arithmetic and the logic, not whether that encoding is what the business intended.
+- The engine runs with decimal numbers, which matches our fixture convention. Canvas Power Apps use floating point.
