@@ -34,6 +34,8 @@ class FakeTransport:
     def __call__(self, settings, system, prompt):
         self.calls += 1
         rule_id = re.search(r"^Rule: (R\d+)", prompt, re.M).group(1)
+        if "Write the BODY of the method" in prompt:
+            return f"return default; // {rule_id}", settings.model
         return json.dumps({"rule": f"Plain-English sentence for {rule_id}.", "confidence": "high"}), settings.model
 
 

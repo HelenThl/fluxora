@@ -8,12 +8,14 @@ from pathlib import Path
 
 import typer
 
+from . import generate as rebuild
 from . import register
 from .extract import ExtractError, build_register
 from .llm import LLMClient, LLMError, get_settings
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_RUNS = ROOT / "runs"
+DEFAULT_GENERATED = ROOT / "generated"
 
 app = typer.Typer(
     help="Fluxora: Transform. Rebuild. Verify. Migrate a Power App and prove it behaves the same, rule by rule.",
@@ -80,6 +82,39 @@ def extract(
     typer.echo(f"LLM: {client.cache_hits} cache hit(s), {client.live_calls} live call(s).")
     typer.echo(f"\nWrote {_display(path)}")
     typer.echo(f"Run ID: {run_id}")
+
+
+@app.command(help="Rebuild: generate the .NET API, Cosmos model, tests and React form from the approved rules.")
+def generate(
+    run_id: str = typer.Argument(..., help="Run ID whose approved rules.json to build from."),
+    offline: bool = typer.Option(False, "--offline", help="Serve LLM text only from the committed cache."),
+    out: Path = typer.Option(DEFAULT_GENERATED, "--out", help="Output folder (default: generated/)."),
+    runs_dir: Path = typer.Option(DEFAULT_RUNS, "--runs-dir", hidden=True),
+) -> None:
+    path = register.rules_path(runs_dir, run_id)
+    if not path.is_file():
+        _fail(f"No register for run {run_id} at {path}")
+    data = register.load(path)
+    client = LLMClient(get_settings(offline=offline), log=typer.echo)
+    typer.echo(f"Rebuild: generating from run {run_id}  [LLM: {client.mode}]")
+    try:
+        result = rebuild.generate(data, client, root=ROOT)
+    except (rebuild.GenerateError, ExtractError, LLMError) as e:
+        _fail(str(e))
+    rebuild.write(result, out)
+
+    if result.skipped:
+        typer.secho(
+            "Skipped (not approved): " + ", ".join(f"{i} ({s})" for i, s in result.skipped), fg=typer.colors.YELLOW
+        )
+    typer.echo("")
+    width = max(len(p) for p in result.files)
+    typer.echo(f"{'File':<{width}}  Rules")
+    for file, ids in result.files.items():
+        typer.echo(f"{file:<{width}}  {', '.join(ids) or '-'}")
+    typer.echo("")
+    typer.echo(f"LLM: {client.cache_hits} cache hit(s), {client.live_calls} live call(s).")
+    typer.echo(f"Wrote {len(result.files)} files to {_display(out)}/")
 
 
 def _display(path: Path) -> str:

@@ -1,0 +1,10 @@
+{
+  "key": "5e67c7968f9b289b259a874444edc6d95107767389c23896f3b391b5846c45a4",
+  "model": "claude-code:claude-opus-5-5",
+  "prompt": "You are migrating one business rule from a Power Platform app to C# (.NET 8). Write the BODY of the method below: only the C# statements that go between its braces.\n\n- Implement exactly the formula. Do not add checks, thresholds, logging, or comments that change behaviour.\n- Use only the parameters given. Money is decimal: write literals with the m suffix, for example 5000m.\n- Keep Power Fx semantics. These were checked with Microsoft's Power Fx engine:\n  - A blank number (a null decimal? parameter) counts as 0 in arithmetic and in <, <=, > and >=.\n  - `=` with a blank number is false, so blank = 0 does not hold.\n  - The `in` operator compares text case-insensitively.\n  - `=` and Switch compare text exactly, so a case mismatch does not match.\n  - Switch with no matching case returns blank (null).\n  - Today() is the `today` parameter.\n- Logic Apps expressions: ticks() counts 100-nanosecond intervals, 864000000000 ticks is one day, and div() on whole numbers is integer division.\n- No using directives, no helper methods, and no class or method declaration.\n\nReply with the method body only, as plain C# statements. No code fences and no explanation.\n\nRule: R05\nWhat it does: The excess is £250 for Motor claims, £350 for Home claims and £100 for Travel claims.\nSource: app.pa.yaml, App.Formulas.Excess\nFormula: Switch(ClaimType,\"Motor\",250,\"Home\",350,\"Travel\",100)\nMethod: public static decimal? Compute(string? claimType)\nConstants in the class: (none)\n",
+  "prompt_sha256": "88ef1200d2754c8173f7f334067347872742d1c116fca9d22b37c6e287bfaa63",
+  "provider": "claude-code",
+  "response": "return claimType switch\n{\n    \"Motor\" => 250m,\n    \"Home\" => 350m,\n    \"Travel\" => 100m,\n    _ => null,\n};",
+  "served_by": "Claude Opus 5.5 in a Claude Code session; written in chat from the prompt, no API call",
+  "system": ""
+}

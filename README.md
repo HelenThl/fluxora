@@ -14,7 +14,7 @@ React + .NET 8 + Cosmos DB, then proves the migrated app behaves the same, rule 
 | Rebuild | Generator | `generated/api/` (.NET 8 + Cosmos model) and `generated/web/` (React form) |
 | Verify | Judge | `runs/<run-id>/parity.json`, plus `repairs.json` from the bounded repair loop |
 
-> Status: **M2** (fixture, Power Fx oracle, Extractor). Full run instructions arrive with M7.
+> Status: **M3** (fixture, Power Fx oracle, Extractor, Generator). Full run instructions arrive with M7.
 
 ## Setup
 
@@ -50,6 +50,35 @@ How the register is built:
   exact prompts, not by an API call. Their cache entries say so: provider `claude-code`, model
   `claude-code:claude-opus-5-5`. To regenerate them with a live model, delete
   `orchestrator/cache/*.json`, fill in `.env`, and run `fluxora extract fixtures/claim-triage`.
+
+## Rebuild: generated app
+
+```bash
+fluxora generate 20261108-143433 --offline   # approved rules -> generated/
+dotnet test generated/api/tests              # every reference case through the Evaluator
+dotnet run --project generated/api           # API on http://localhost:5080
+cd generated/web && npm install && npm run dev   # form on http://localhost:5173
+```
+
+What gets generated:
+
+- **One file per approved rule.** Each `generated/api/Rules/R0x.cs` holds a single static method
+  plus its constants (status value or error message, taken from the fixture). Its header names the
+  rule ID, the plain-English sentence, the source ref and the formula.
+- **Written by the LLM:** only the statements inside each method.
+- **Rendered by code:** everything else. That includes `Evaluator.cs`, which orders the rule calls
+  by the precedence the Extractor read from the fixture and holds no business values.
+- **API:** `POST /claims/evaluate` takes the nine Claim fields plus an optional `asOf` (defaults to
+  today). It returns `errors`, `messages`, `excess`, `payable`, `lateReport`, `status` and
+  `firedRules`, and saves the claim through `IClaimRepository`.
+- **Storage:** `Storage:Provider` is `InMemory` by default; `Cosmos` uses `Microsoft.Azure.Cosmos`.
+- **Skipped rules:** pending or rejected rules are left out and reported. If an approved rule needs
+  a skipped rule's output, generation stops.
+- **Repeatable:** offline reruns are byte-identical. `generated/manifest.json` maps each file to the
+  rule IDs it implements.
+- **Where the method bodies came from:** like the M2 sentences, they were written in the Claude Code
+  session from the exact `generate_rule.md` prompts, not by an API call (provider `claude-code` in
+  the cache).
 
 ## Layout
 

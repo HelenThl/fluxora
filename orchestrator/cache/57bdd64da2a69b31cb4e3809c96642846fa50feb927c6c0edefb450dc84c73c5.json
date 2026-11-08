@@ -1,0 +1,10 @@
+{
+  "key": "57bdd64da2a69b31cb4e3809c96642846fa50feb927c6c0edefb450dc84c73c5",
+  "model": "claude-code:claude-opus-5-5",
+  "prompt": "You are migrating one business rule from a Power Platform app to C# (.NET 8). Write the BODY of the method below: only the C# statements that go between its braces.\n\n- Implement exactly the formula. Do not add checks, thresholds, logging, or comments that change behaviour.\n- Use only the parameters given. Money is decimal: write literals with the m suffix, for example 5000m.\n- Keep Power Fx semantics. These were checked with Microsoft's Power Fx engine:\n  - A blank number (a null decimal? parameter) counts as 0 in arithmetic and in <, <=, > and >=.\n  - `=` with a blank number is false, so blank = 0 does not hold.\n  - The `in` operator compares text case-insensitively.\n  - `=` and Switch compare text exactly, so a case mismatch does not match.\n  - Switch with no matching case returns blank (null).\n  - Today() is the `today` parameter.\n- Logic Apps expressions: ticks() counts 100-nanosecond intervals, 864000000000 ticks is one day, and div() on whole numbers is integer division.\n- No using directives, no helper methods, and no class or method declaration.\n\nReply with the method body only, as plain C# statements. No code fences and no explanation.\n\nRule: R03\nWhat it does: A claim cannot be submitted if the incident date is later than today.\nSource: app.pa.yaml, App.Formulas.IncidentInFuture\nFormula: IncidentDate > Today()\nMethod: public static bool Applies(DateOnly incidentDate, DateOnly today)\nConstants in the class: Message = \"Incident date cannot be in the future\"\n",
+  "prompt_sha256": "10e61c9dc11fdc99126d8a1ecda93366c48bf34766c830a0d88fd066dc419c37",
+  "provider": "claude-code",
+  "response": "return incidentDate > today;",
+  "served_by": "Claude Opus 5.5 in a Claude Code session; written in chat from the prompt, no API call",
+  "system": ""
+}

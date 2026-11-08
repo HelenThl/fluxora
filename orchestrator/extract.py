@@ -47,6 +47,7 @@ class Found:
     inputs: list[str]
     output: str
     context: str
+    outcome: dict = field(default_factory=dict)  # e.g. {"Status": "Not covered"} or {"Message": "..."}
 
 
 @dataclass
@@ -59,15 +60,23 @@ class Extraction:
 # --- public entry point ---------------------------------------------------------------------------
 
 
-def build_register(fixture_dir: Path, client: LLMClient) -> Extraction:
-    fixture_dir = Path(fixture_dir)
+def find_rules(fixture_dir: Path) -> dict[str, Found]:
+    """Every rule the parser finds, keyed by "<file>#<ref>" (the key rule-ids.json uses)."""
+    app, flow = _parse_fixture(Path(fixture_dir))
+    return {_key(f): f for f in app.rules + flow.rules}
+
+
+def _parse_fixture(fixture_dir: Path) -> tuple["_App", "_Flow"]:
     for name in (APP_FILE, FLOW_FILE, SCHEMA_FILE, RULE_IDS_FILE):
         if not (fixture_dir / name).is_file():
             raise ExtractError(f"{fixture_dir / name} is missing")
-
     claim_fields = _claim_fields(fixture_dir / SCHEMA_FILE)
-    app = _parse_app(fixture_dir / APP_FILE, claim_fields)
-    flow = _parse_flow(fixture_dir / FLOW_FILE)
+    return _parse_app(fixture_dir / APP_FILE, claim_fields), _parse_flow(fixture_dir / FLOW_FILE)
+
+
+def build_register(fixture_dir: Path, client: LLMClient) -> Extraction:
+    fixture_dir = Path(fixture_dir)
+    app, flow = _parse_fixture(fixture_dir)
     found = app.rules + flow.rules
 
     ids, warnings = _assign_ids(found, fixture_dir / RULE_IDS_FILE)
@@ -186,20 +195,23 @@ def _parse_app(path: Path, claim_fields: set[str]) -> _App:
     found = []
     for name in rule_names:
         expr = named[name]
+        outcome: dict = {}
         if name in validation:
             output = "Errors"
             message = messages.get(name)
             context = (f"When true, the app shows the message '{message}' and " if message else "When true, ") + (
                 "the Submit button is disabled, so the claim cannot be submitted."
             )
+            outcome = {"Message": message or f"{name} failed"}
         elif name in status_values:
             output = "Status"
             context = f"When true (and no earlier check has applied), Status is set to '{status_values[name]}'."
+            outcome = {"Status": status_values[name]}
         else:
             output = name
             context = f"Computes {name} for the claim; the claim screen shows it."
         inputs = [i for i in _idents(expr) if (i in claim_fields or (i in rule_names and i != name))]
-        found.append(Found(APP_FILE, f"App.Formulas.{name}", name, expr, inputs, output, context))
+        found.append(Found(APP_FILE, f"App.Formulas.{name}", name, expr, inputs, output, context, outcome))
 
     return _App(found, validation, status_chain, status_from_flow, unsupported, ignored)
 
@@ -334,6 +346,7 @@ def _parse_flow(path: Path) -> _Flow:
                     [i for i in _idents(formula) if i in fields],
                     ", ".join(v for v, _ in sets),
                     "When true, the flow sets " + _assignments(sets) + ".",
+                    dict(sets),
                 )
             )
             walk(yes, f"{ref}.actions.")
@@ -349,6 +362,7 @@ def _parse_flow(path: Path) -> _Flow:
                         [],
                         ", ".join(v for v, _ in defaults),
                         "If none of the flow's earlier conditions applied, the flow sets " + _assignments(defaults) + ".",
+                        dict(defaults),
                     )
                 )
             walk(no, f"{ref}.else.actions.")

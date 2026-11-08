@@ -1,0 +1,10 @@
+{
+  "key": "65c71fc4569d6991fb2757db3a8870c556be5c9d87fb7fa8d4362c658850802b",
+  "model": "claude-code:claude-opus-5-5",
+  "prompt": "You are migrating one business rule from a Power Platform app to C# (.NET 8). Write the BODY of the method below: only the C# statements that go between its braces.\n\n- Implement exactly the formula. Do not add checks, thresholds, logging, or comments that change behaviour.\n- Use only the parameters given. Money is decimal: write literals with the m suffix, for example 5000m.\n- Keep Power Fx semantics. These were checked with Microsoft's Power Fx engine:\n  - A blank number (a null decimal? parameter) counts as 0 in arithmetic and in <, <=, > and >=.\n  - `=` with a blank number is false, so blank = 0 does not hold.\n  - The `in` operator compares text case-insensitively.\n  - `=` and Switch compare text exactly, so a case mismatch does not match.\n  - Switch with no matching case returns blank (null).\n  - Today() is the `today` parameter.\n- Logic Apps expressions: ticks() counts 100-nanosecond intervals, 864000000000 ticks is one day, and div() on whole numbers is integer division.\n- No using directives, no helper methods, and no class or method declaration.\n\nReply with the method body only, as plain C# statements. No code fences and no explanation.\n\nRule: R11\nWhat it does: If none of the flow's earlier checks apply, the claim's status is set to Approved.\nSource: flow.json, actions.Condition_LateReport.else.actions.Condition_Amount.else.actions.Set_Status_Approved\nFormula: otherwise\nMethod: public static bool Applies()\nConstants in the class: Status = \"Approved\"\n",
+  "prompt_sha256": "3b7e9fe9841ecc7b0842821da4fdc288895472857b2d39f4ca0ce7de8cc2308c",
+  "provider": "claude-code",
+  "response": "return true;",
+  "served_by": "Claude Opus 5.5 in a Claude Code session; written in chat from the prompt, no API call",
+  "system": ""
+}

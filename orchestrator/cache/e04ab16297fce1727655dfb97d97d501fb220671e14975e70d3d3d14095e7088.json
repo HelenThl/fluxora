@@ -1,0 +1,10 @@
+{
+  "key": "e04ab16297fce1727655dfb97d97d501fb220671e14975e70d3d3d14095e7088",
+  "model": "claude-code:claude-opus-5-5",
+  "prompt": "You are migrating one business rule from a Power Platform app to C# (.NET 8). Write the BODY of the method below: only the C# statements that go between its braces.\n\n- Implement exactly the formula. Do not add checks, thresholds, logging, or comments that change behaviour.\n- Use only the parameters given. Money is decimal: write literals with the m suffix, for example 5000m.\n- Keep Power Fx semantics. These were checked with Microsoft's Power Fx engine:\n  - A blank number (a null decimal? parameter) counts as 0 in arithmetic and in <, <=, > and >=.\n  - `=` with a blank number is false, so blank = 0 does not hold.\n  - The `in` operator compares text case-insensitively.\n  - `=` and Switch compare text exactly, so a case mismatch does not match.\n  - Switch with no matching case returns blank (null).\n  - Today() is the `today` parameter.\n- Logic Apps expressions: ticks() counts 100-nanosecond intervals, 864000000000 ticks is one day, and div() on whole numbers is integer division.\n- No using directives, no helper methods, and no class or method declaration.\n\nReply with the method body only, as plain C# statements. No code fences and no explanation.\n\nRule: R08\nWhat it does: A Travel claim over £2,000 cannot be submitted without a receipt.\nSource: app.pa.yaml, App.Formulas.ReceiptMissing\nFormula: ClaimType = \"Travel\" && ClaimAmount > 2000 && !HasReceipt\nMethod: public static bool Applies(string? claimType, decimal? claimAmount, bool hasReceipt)\nConstants in the class: Message = \"A receipt is required for travel claims over £2,000\"\n",
+  "prompt_sha256": "fccf7f6252732f9bc826edc0488db3019953df4201fd75d8e9cbd0c84dbd480c",
+  "provider": "claude-code",
+  "response": "return claimType == \"Travel\" && (claimAmount ?? 0m) > 2000m && !hasReceipt;",
+  "served_by": "Claude Opus 5.5 in a Claude Code session; written in chat from the prompt, no API call",
+  "system": ""
+}

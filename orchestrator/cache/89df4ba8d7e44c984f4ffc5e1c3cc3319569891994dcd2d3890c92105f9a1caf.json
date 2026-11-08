@@ -1,0 +1,10 @@
+{
+  "key": "89df4ba8d7e44c984f4ffc5e1c3cc3319569891994dcd2d3890c92105f9a1caf",
+  "model": "claude-code:claude-opus-5-5",
+  "prompt": "You are migrating one business rule from a Power Platform app to C# (.NET 8). Write the BODY of the method below: only the C# statements that go between its braces.\n\n- Implement exactly the formula. Do not add checks, thresholds, logging, or comments that change behaviour.\n- Use only the parameters given. Money is decimal: write literals with the m suffix, for example 5000m.\n- Keep Power Fx semantics. These were checked with Microsoft's Power Fx engine:\n  - A blank number (a null decimal? parameter) counts as 0 in arithmetic and in <, <=, > and >=.\n  - `=` with a blank number is false, so blank = 0 does not hold.\n  - The `in` operator compares text case-insensitively.\n  - `=` and Switch compare text exactly, so a case mismatch does not match.\n  - Switch with no matching case returns blank (null).\n  - Today() is the `today` parameter.\n- Logic Apps expressions: ticks() counts 100-nanosecond intervals, 864000000000 ticks is one day, and div() on whole numbers is integer division.\n- No using directives, no helper methods, and no class or method declaration.\n\nReply with the method body only, as plain C# statements. No code fences and no explanation.\n\nRule: R01\nWhat it does: A claim cannot be submitted if the claim amount is missing, zero or negative; the form shows 'Amount must be greater than zero'.\nSource: app.pa.yaml, App.Formulas.AmountInvalid\nFormula: IsBlank(ClaimAmount) || ClaimAmount <= 0\nMethod: public static bool Applies(decimal? claimAmount)\nConstants in the class: Message = \"Amount must be greater than zero\"\n",
+  "prompt_sha256": "4dbd0290df402d8ecb27c8ce139bf0d23d9c3045d8cd7e6024d66677835a3e7e",
+  "provider": "claude-code",
+  "response": "return claimAmount is null || claimAmount.Value <= 0m;",
+  "served_by": "Claude Opus 5.5 in a Claude Code session; written in chat from the prompt, no API call",
+  "system": ""
+}

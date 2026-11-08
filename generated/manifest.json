@@ -1,0 +1,176 @@
+{
+  "generatedFrom": {
+    "runId": "20261108-143433",
+    "fixture": "fixtures/claim-triage"
+  },
+  "ruleBodyModel": "claude-code:claude-opus-5-5",
+  "skipped": [],
+  "files": [
+    {
+      "path": "api/Contracts.cs",
+      "rules": []
+    },
+    {
+      "path": "api/Data/ClaimDocument.cs",
+      "rules": []
+    },
+    {
+      "path": "api/Data/CosmosClaimRepository.cs",
+      "rules": []
+    },
+    {
+      "path": "api/Data/IClaimRepository.cs",
+      "rules": []
+    },
+    {
+      "path": "api/Data/InMemoryClaimRepository.cs",
+      "rules": []
+    },
+    {
+      "path": "api/Evaluator.cs",
+      "rules": [
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R07",
+        "R08",
+        "R09",
+        "R10",
+        "R11"
+      ]
+    },
+    {
+      "path": "api/Fluxora.Generated.Api.csproj",
+      "rules": []
+    },
+    {
+      "path": "api/Program.cs",
+      "rules": []
+    },
+    {
+      "path": "api/Rules/R01.cs",
+      "rules": [
+        "R01"
+      ]
+    },
+    {
+      "path": "api/Rules/R02.cs",
+      "rules": [
+        "R02"
+      ]
+    },
+    {
+      "path": "api/Rules/R03.cs",
+      "rules": [
+        "R03"
+      ]
+    },
+    {
+      "path": "api/Rules/R04.cs",
+      "rules": [
+        "R04"
+      ]
+    },
+    {
+      "path": "api/Rules/R05.cs",
+      "rules": [
+        "R05"
+      ]
+    },
+    {
+      "path": "api/Rules/R06.cs",
+      "rules": [
+        "R06"
+      ]
+    },
+    {
+      "path": "api/Rules/R07.cs",
+      "rules": [
+        "R07"
+      ]
+    },
+    {
+      "path": "api/Rules/R08.cs",
+      "rules": [
+        "R08"
+      ]
+    },
+    {
+      "path": "api/Rules/R09.cs",
+      "rules": [
+        "R09"
+      ]
+    },
+    {
+      "path": "api/Rules/R10.cs",
+      "rules": [
+        "R10"
+      ]
+    },
+    {
+      "path": "api/Rules/R11.cs",
+      "rules": [
+        "R11"
+      ]
+    },
+    {
+      "path": "api/appsettings.json",
+      "rules": []
+    },
+    {
+      "path": "api/tests/Fluxora.Generated.Api.Tests.csproj",
+      "rules": []
+    },
+    {
+      "path": "api/tests/ReferenceCaseTests.cs",
+      "rules": [
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R07",
+        "R08",
+        "R09",
+        "R10",
+        "R11"
+      ]
+    },
+    {
+      "path": "web/index.html",
+      "rules": []
+    },
+    {
+      "path": "web/package.json",
+      "rules": []
+    },
+    {
+      "path": "web/src/App.tsx",
+      "rules": []
+    },
+    {
+      "path": "web/src/fields.ts",
+      "rules": []
+    },
+    {
+      "path": "web/src/main.tsx",
+      "rules": []
+    },
+    {
+      "path": "web/src/styles.css",
+      "rules": []
+    },
+    {
+      "path": "web/tsconfig.json",
+      "rules": []
+    },
+    {
+      "path": "web/vite.config.ts",
+      "rules": []
+    }
+  ]
+}

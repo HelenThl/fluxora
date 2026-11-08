@@ -1,0 +1,10 @@
+{
+  "key": "324c0a32ca1ca46f5f5874921a29f62ab26242ce9e11c693310de8a98d693bac",
+  "model": "claude-code:claude-opus-5-5",
+  "prompt": "You are migrating one business rule from a Power Platform app to C# (.NET 8). Write the BODY of the method below: only the C# statements that go between its braces.\n\n- Implement exactly the formula. Do not add checks, thresholds, logging, or comments that change behaviour.\n- Use only the parameters given. Money is decimal: write literals with the m suffix, for example 5000m.\n- Keep Power Fx semantics. These were checked with Microsoft's Power Fx engine:\n  - A blank number (a null decimal? parameter) counts as 0 in arithmetic and in <, <=, > and >=.\n  - `=` with a blank number is false, so blank = 0 does not hold.\n  - The `in` operator compares text case-insensitively.\n  - `=` and Switch compare text exactly, so a case mismatch does not match.\n  - Switch with no matching case returns blank (null).\n  - Today() is the `today` parameter.\n- Logic Apps expressions: ticks() counts 100-nanosecond intervals, 864000000000 ticks is one day, and div() on whole numbers is integer division.\n- No using directives, no helper methods, and no class or method declaration.\n\nReply with the method body only, as plain C# statements. No code fences and no explanation.\n\nRule: R06\nWhat it does: The payable amount is the claim amount minus the excess, and never less than £0.\nSource: app.pa.yaml, App.Formulas.Payable\nFormula: Max(0, ClaimAmount - Excess)\nMethod: public static decimal? Compute(decimal? claimAmount, decimal? excess)\nConstants in the class: (none)\n",
+  "prompt_sha256": "eacbefa1fa2048d9bf97a0067d71b54cbe6b451d8cfc93ac7555e1ecc6d8dd20",
+  "provider": "claude-code",
+  "response": "return Math.Max(0m, (claimAmount ?? 0m) - (excess ?? 0m));",
+  "served_by": "Claude Opus 5.5 in a Claude Code session; written in chat from the prompt, no API call",
+  "system": ""
+}
