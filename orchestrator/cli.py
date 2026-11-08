@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -9,6 +10,7 @@ from pathlib import Path
 import typer
 
 from . import generate as rebuild
+from . import judge as verify
 from . import register
 from .extract import ExtractError, build_register
 from .llm import LLMClient, LLMError, get_settings
@@ -115,6 +117,64 @@ def generate(
     typer.echo("")
     typer.echo(f"LLM: {client.cache_hits} cache hit(s), {client.live_calls} live call(s).")
     typer.echo(f"Wrote {len(result.files)} files to {_display(out)}/")
+
+
+@app.command(help="Verify: run the migrated API against every reference case and write runs/<run-id>/parity.json.")
+def judge(
+    run_id: str = typer.Argument(..., help="Run ID whose register to judge."),
+    port: int = typer.Option(verify.DEFAULT_PORT, "--port", help="Local port for the API under test."),
+    api_dir: Path = typer.Option(verify.DEFAULT_API_DIR, "--api-dir", hidden=True),
+    runs_dir: Path = typer.Option(DEFAULT_RUNS, "--runs-dir", hidden=True),
+) -> None:
+    path = register.rules_path(runs_dir, run_id)
+    if not path.is_file():
+        _fail(f"No register for run {run_id} at {path}")
+    data = register.load(path)
+    typer.echo(f"Verify: Parity Court for run {run_id}")
+    try:
+        verdict = verify.judge(data, api_dir=api_dir, port=port, work_dir=path.parent / "work", root=ROOT, log=typer.echo)
+    except verify.JudgeError as e:
+        _fail(str(e))
+    parity_path = path.parent / "parity.json"
+    verify.write_parity(verdict, parity_path)
+    _print_court(verdict.parity)
+    typer.echo(f"\nWrote {_display(parity_path)}")
+    raise typer.Exit(0 if verdict.passed else 1)
+
+
+def _print_court(parity: dict) -> None:
+    colours = {"PASS": typer.colors.GREEN, "FAIL": typer.colors.RED, "NO CASES": typer.colors.YELLOW}
+    ref = parity["referenceCases"]
+    typer.echo("")
+    typer.secho(f"PARITY COURT  -  run {parity['runId']}", bold=True)
+    typer.echo(
+        f"Reference cases: {ref['path']}  sha256 {ref['sha256Before'][:12]}  "
+        + ("(unchanged)" if ref["unchanged"] else "(CHANGED DURING THE RUN)")
+    )
+    typer.echo(f"API under test:  {parity['api']['project']} at {parity['api']['url']}")
+    typer.echo("")
+    typer.echo(f"{'Rule':<5} {'Cases':<6} {'Verdict':<9} {'Oracle':<15} What the rule says")
+    typer.echo(f"{'-' * 5} {'-' * 6} {'-' * 9} {'-' * 15} {'-' * 48}")
+    cases = {c["id"]: c for c in parity["cases"]}
+    for rule in parity["rules"]:
+        passed = rule["casesTotal"] - rule["casesFailed"]
+        sentence = rule["rule"] if len(rule["rule"]) <= 60 else rule["rule"][:57] + "..."
+        typer.echo(f"{rule['id']:<5} {f'{passed}/{rule['casesTotal']}':<6} ", nl=False)
+        typer.secho(f"{rule['status']:<9}", fg=colours.get(rule["status"]), bold=True, nl=False)
+        typer.echo(f" {rule['oracle']:<15} {sentence}")
+        for case_id in rule["failedCases"]:
+            for name, d in cases[case_id]["diff"].items():
+                typer.secho(
+                    f"      {case_id}  {name}: expected {json.dumps(d['expected'])}, got {json.dumps(d['actual'])}",
+                    fg=typer.colors.RED,
+                )
+    s, t = parity["summary"], parity["timings"]
+    typer.echo("")
+    typer.echo(
+        f"Cases {s['cases']['passed']}/{s['cases']['total']} pass   Rules {s['rules']['passed']}/{s['rules']['total']} pass   "
+        f"Time: build {t['buildSeconds']}s, start {t['startupSeconds']}s, cases {t['casesSeconds']}s"
+    )
+    typer.secho(f"VERDICT: {s['result']}", fg=colours[s["result"]], bold=True)
 
 
 def _display(path: Path) -> str:

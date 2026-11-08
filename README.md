@@ -14,7 +14,7 @@ React + .NET 8 + Cosmos DB, then proves the migrated app behaves the same, rule 
 | Rebuild | Generator | `generated/api/` (.NET 8 + Cosmos model) and `generated/web/` (React form) |
 | Verify | Judge | `runs/<run-id>/parity.json`, plus `repairs.json` from the bounded repair loop |
 
-> Status: **M3** (fixture, Power Fx oracle, Extractor, Generator). Full run instructions arrive with M7.
+> Status: **M4** (fixture, Power Fx oracle, Extractor, Generator, Parity Court). Full run instructions arrive with M7.
 
 ## Setup
 
@@ -79,6 +79,30 @@ What gets generated:
 - **Where the method bodies came from:** like the M2 sentences, they were written in the Claude Code
   session from the exact `generate_rule.md` prompts, not by an API call (provider `claude-code` in
   the cache).
+
+## Verify: Parity Court
+
+```bash
+fluxora judge 20261108-143433        # exit code 0 only if every case passes
+```
+
+What the judge does:
+
+1. **Builds and starts the API.** It runs `dotnet build generated/api`, then starts that build as a
+   single process on `127.0.0.1:5080`, and always stops it afterwards. It refuses to run if the port
+   is already in use, so it never judges a server it didn't start.
+2. **Sends every reference case.** Each case is POSTed with `asOf` set to the case's `today`.
+3. **Compares field by field.** Money is compared as exact decimals, and `errors` as a set.
+4. **Writes the evidence** to `runs/<run-id>/parity.json`:
+   - each case's inputs, expected and actual values, per-field diff and pass/fail, plus the oracle
+     that produced the expectation (`powerfx-engine` or `manual`)
+   - a per-rule rollup
+   - the SHA-256 of `reference-cases.json` before and after the run
+   - measured timings
+
+**Blame on failure.** A failing case blames only the rules that own the field that diverged, narrowed
+to the rules that actually fired. For example, with R09 broken to `>=`, case R09-02 fails on status,
+and only R09 turns red.
 
 ## Layout
 

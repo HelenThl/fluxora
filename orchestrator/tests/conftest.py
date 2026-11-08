@@ -11,18 +11,30 @@ ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "fixtures" / "claim-triage"
 
 
+LOOPBACK = {"127.0.0.1", "localhost", "::1"}
+
+
 @pytest.fixture(autouse=True)
 def isolated(monkeypatch):
-    """No real LLM settings, no .env, and no network in any test."""
+    """No real LLM settings, no .env, and no network except loopback (the judge's own API)."""
     for name in ("LLM_PROVIDER", "LLM_API_KEY", "LLM_MODEL", "LLM_BASE_URL"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("FLUXORA_NO_DOTENV", "1")
 
-    def blocked(*args, **kwargs):
-        raise RuntimeError("tests must not open network connections")
+    real_create_connection, real_connect = socket.create_connection, socket.socket.connect
 
-    monkeypatch.setattr(socket, "create_connection", blocked)
-    monkeypatch.setattr(socket.socket, "connect", blocked)
+    def create_connection(address, *args, **kwargs):
+        if address[0] not in LOOPBACK:
+            raise RuntimeError(f"tests must not open network connections (tried {address[0]})")
+        return real_create_connection(address, *args, **kwargs)
+
+    def connect(self, address):
+        if isinstance(address, tuple) and address[0] not in LOOPBACK:
+            raise RuntimeError(f"tests must not open network connections (tried {address[0]})")
+        return real_connect(self, address)
+
+    monkeypatch.setattr(socket, "create_connection", create_connection)
+    monkeypatch.setattr(socket.socket, "connect", connect)
 
 
 class FakeTransport:
