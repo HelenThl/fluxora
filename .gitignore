@@ -1,0 +1,23 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+
+# .NET
+bin/
+obj/
+.vs/
+
+# OS
+.DS_Store
+
+# Run scratch output
+runs/*/work/
