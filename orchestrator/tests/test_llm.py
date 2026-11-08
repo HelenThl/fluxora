@@ -29,6 +29,13 @@ def test_offline_miss_raises_a_clear_error(tmp_path):
         client.complete("a prompt nobody has cached")
 
 
+def test_offline_miss_names_the_model_mismatch(tmp_path, fake_transport):
+    LLMClient(settings(), cache_dir=tmp_path, transport=fake_transport, log=lambda _: None).complete("Rule: R01\nx")
+    offline = LLMClient(settings(model="another-model", api_key=None, offline=True), cache_dir=tmp_path, log=lambda _: None)
+    with pytest.raises(CacheMiss, match=r"LLM_MODEL is set to 'another-model'.*fake-model.*unset LLM_MODEL"):
+        offline.complete("Rule: R01\nx")
+
+
 def test_live_call_is_cached_then_reused(tmp_path, fake_transport):
     client = LLMClient(settings(), cache_dir=tmp_path, transport=fake_transport, log=lambda _: None)
     first = client.complete("Rule: R01\nanything")

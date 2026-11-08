@@ -110,10 +110,16 @@ class LLMClient:
         s = self.settings
         if s.offline:
             model = s.model or "any model"
-            raise CacheMiss(
-                f"No cached response for this prompt ({model}, prompt {prompt_digest(system, prompt)[:12]}). "
-                "Warm the cache by running once with LLM_PROVIDER, LLM_API_KEY and LLM_MODEL set."
-            )
+            cached = sorted({e.get("model") for e in self._entries() if e.get("model")})
+            if s.model and cached and s.model not in cached:
+                hint = (
+                    f"LLM_MODEL is set to {s.model!r}, but this run is offline and the cache only holds answers from "
+                    f"{', '.join(cached)}. For an offline run, unset LLM_MODEL (check .env) or set it to one of those; "
+                    "for live calls, set LLM_API_KEY too."
+                )
+            else:
+                hint = "Warm the cache by running once with LLM_PROVIDER, LLM_API_KEY and LLM_MODEL set."
+            raise CacheMiss(f"No cached response for this prompt ({model}, prompt {prompt_digest(system, prompt)[:12]}). {hint}")
         if s.provider not in PROVIDERS:
             raise LLMError(f"LLM_PROVIDER must be one of {', '.join(PROVIDERS)}; got {s.provider!r}.")
         if not s.model:
