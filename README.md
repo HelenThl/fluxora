@@ -88,6 +88,17 @@ Without a key, everything is answered from the committed cache.
 
 ## Run the demo
 
+Check the machine first. This is read-only and takes a few seconds:
+
+```bash
+fluxora doctor
+```
+
+It checks Python, the .NET 8 SDK, the NuGet packages for an offline first build, free ports, your
+LLM settings (for example `LLM_MODEL` set without a key), that the committed cache answers every
+prompt, the recorded repair patch, and whether the dashboard is built. It ends READY or NOT READY
+and names the fix.
+
 ```bash
 fluxora demo
 ```
@@ -149,6 +160,7 @@ fluxora judge <run-id>                            # Verify -> parity.json, repai
 fluxora judge <run-id> --seed-defect threshold    # the red-to-green moment
 fluxora evidence <run-id>                         # -> runs/<run-id>/evidence.md
 fluxora serve [<run-id>]                          # dashboard on http://127.0.0.1:8765/
+fluxora doctor                                    # pre-flight checks before presenting
 ```
 
 `runs/20261108-143433/` is the committed reference run, already approved, judged and repaired.
@@ -244,7 +256,7 @@ flow conditions. It is not a general Power Fx compiler.
 ## Tests and checks
 
 ```bash
-pytest                                       # 69 tests; the judge, repair and demo tests need the .NET SDK
+pytest                                       # 75 tests; the judge, repair, demo and doctor tests need the .NET SDK
 dotnet test generated/api/tests              # every reference case through the generated Evaluator
 python scripts/check_fixture.py              # fixture coverage and boundary values
 ```

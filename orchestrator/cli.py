@@ -367,6 +367,25 @@ def demo(
     raise typer.Exit(0 if passed else 1)
 
 
+@app.command(help="Pre-flight checks before a live demo: Python, .NET 8, NuGet cache, ports, LLM settings, offline cache, recorded patch.")
+def doctor(port: int = typer.Option(verify.DEFAULT_PORT, "--port", help="Port the judge will use.")) -> None:
+    from .doctor import FAIL, OK, run_checks
+
+    typer.secho("fluxora doctor: is this machine ready for `fluxora demo`?", bold=True)
+    checks = run_checks(port=port, root=ROOT)
+    width = max(len(name) for _, name, _ in checks)
+    colours = {OK: typer.colors.GREEN, FAIL: typer.colors.RED}
+    for status, name, detail in checks:
+        typer.secho(f"{status:<5}", fg=colours.get(status, typer.colors.YELLOW), bold=True, nl=False)
+        typer.echo(f" {name:<{width}}  {detail}")
+    failed = [name for status, name, _ in checks if status == FAIL]
+    typer.echo("")
+    if failed:
+        typer.secho(f"NOT READY: fix {', '.join(failed)}.", fg=typer.colors.RED, bold=True)
+        raise typer.Exit(1)
+    typer.secho("READY: `fluxora demo` should run offline from the committed artefacts.", fg=typer.colors.GREEN, bold=True)
+
+
 def _llm_mode(hits: int, live: int) -> str:
     if live and hits:
         return f"live LLM ({live} calls) + cached LLM ({hits} responses)"
