@@ -61,14 +61,18 @@ def run_checks(port: int = DEFAULT_PORT, root: Path = ROOT) -> list[tuple[str, s
     # LLM settings and the offline cache
     settings = get_settings()
     if not settings.offline:
-        add(OK, "LLM mode", f"live: {settings.provider}, {settings.model} (cache first, then API calls)")
+        add(WARN, "LLM mode", f"live: {settings.provider}, {settings.model} (check .env). `fluxora demo` will call the "
+            "API on any cache miss; for a repeatable offline stage run use `fluxora demo --offline`")
     else:
         add(OK, "LLM mode", "offline: answers come from the committed cache only")
     cached_models = sorted({json.loads(p.read_text(encoding="utf-8")).get("model") for p in CACHE_DIR.glob("*.json")})
     if settings.offline and settings.model and settings.model not in cached_models:
         add(FAIL, "LLM_MODEL vs cache",
             f"LLM_MODEL={settings.model!r} but no key, and the cache holds {', '.join(cached_models)}. Unset LLM_MODEL (check .env).")
-    add(*_cache_covers_demo(root))
+    status, name, detail = _cache_covers_demo(root)
+    if status == FAIL and not settings.offline:
+        status, detail = WARN, f"{detail} Without --offline the demo will make live calls for these prompts."
+    add(status, name, detail)
 
     # Recorded repair patch (offline fallback for the seeded defect)
     add(*_recorded_patch_matches(root))
@@ -122,7 +126,7 @@ def _cache_covers_demo(root: Path) -> tuple[str, str, str]:
         register.approve(reg, approve_all=True, reject=[])
         generate(reg, client, root=root)
     except (LLMError, ExtractError, GenerateError) as e:
-        return FAIL, "Cache covers the demo", str(e)[:300]
+        return FAIL, "Cache covers the demo", str(e)[:500]
     return OK, "Cache covers the demo", f"{client.cache_hits} extract and generate prompts answered offline"
 
 

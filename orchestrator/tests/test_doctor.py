@@ -34,3 +34,13 @@ def test_doctor_catches_llm_model_without_a_key(monkeypatch):
     result = CliRunner().invoke(app, ["doctor", "--port", "5091"])
     assert result.exit_code == 1
     assert "Unset LLM_MODEL" in result.output and "NOT READY" in result.output
+
+
+def test_doctor_warns_when_a_live_key_is_set(monkeypatch):
+    # A live key in .env means `fluxora demo` would call the API on a miss: not an offline stage.
+    monkeypatch.setenv("LLM_PROVIDER", "openai")
+    monkeypatch.setenv("LLM_API_KEY", "test-key")
+    monkeypatch.setenv("LLM_MODEL", "partly-cached-model")
+    result = CliRunner().invoke(app, ["doctor", "--port", "5091"])
+    assert next(l for l in result.output.splitlines() if "LLM mode" in l).startswith("WARN")
+    assert "--offline" in result.output

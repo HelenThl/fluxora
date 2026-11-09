@@ -384,6 +384,10 @@ def doctor(port: int = typer.Option(verify.DEFAULT_PORT, "--port", help="Port th
     if failed:
         typer.secho(f"NOT READY: fix {', '.join(failed)}.", fg=typer.colors.RED, bold=True)
         raise typer.Exit(1)
+    warned = [name for status, name, _ in checks if status != OK]
+    if warned:
+        typer.secho(f"READY WITH WARNINGS: read {', '.join(warned)} above before presenting.", fg=typer.colors.YELLOW, bold=True)
+        return
     typer.secho("READY: `fluxora demo` should run offline from the committed artefacts.", fg=typer.colors.GREEN, bold=True)
 
 
