@@ -110,8 +110,17 @@ class LLMClient:
         s = self.settings
         if s.offline:
             model = s.model or "any model"
-            cached = sorted({e.get("model") for e in self._entries() if e.get("model")})
-            if s.model and cached and s.model not in cached:
+            entries = self._entries()
+            cached = sorted({e.get("model") for e in entries if e.get("model")})
+            others = [m for m in cached if m != s.model]
+            if s.model and s.model in cached and others:
+                # A .env left on a model that is only partly cached. Its cached answers also change later
+                # prompts (generate quotes the extracted sentences), so no model may hold this one.
+                hint = (
+                    f"LLM_MODEL is set to {s.model!r} (check .env), which is only partly cached. The cache also holds "
+                    f"answers from {', '.join(others)}. For an offline run, unset LLM_MODEL or set LLM_MODEL={others[0]}."
+                )
+            elif s.model and cached and s.model not in cached:
                 hint = (
                     f"LLM_MODEL is set to {s.model!r}, but this run is offline and the cache only holds answers from "
                     f"{', '.join(cached)}. For an offline run, unset LLM_MODEL (check .env) or set it to one of those; "

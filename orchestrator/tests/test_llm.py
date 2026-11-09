@@ -36,6 +36,15 @@ def test_offline_miss_names_the_model_mismatch(tmp_path, fake_transport):
         offline.complete("Rule: R01\nx")
 
 
+def test_offline_miss_on_a_partly_cached_model_names_the_other_model(tmp_path, fake_transport):
+    # The configured model has some cache entries, just not this one; another model is also cached.
+    LLMClient(settings(), cache_dir=tmp_path, transport=fake_transport, log=lambda _: None).complete("Rule: R01\nx")
+    LLMClient(settings(model="partial-model"), cache_dir=tmp_path, transport=fake_transport, log=lambda _: None).complete("Rule: R02\ny")
+    offline = LLMClient(settings(model="partial-model", offline=True), cache_dir=tmp_path, log=lambda _: None)
+    with pytest.raises(CacheMiss, match=r"'partial-model'.*only partly cached.*fake-model.*LLM_MODEL=fake-model"):
+        offline.complete("Rule: R01\nx")
+
+
 def test_live_call_is_cached_then_reused(tmp_path, fake_transport):
     client = LLMClient(settings(), cache_dir=tmp_path, transport=fake_transport, log=lambda _: None)
     first = client.complete("Rule: R01\nanything")
