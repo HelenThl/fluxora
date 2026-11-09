@@ -261,6 +261,10 @@ dotnet test generated/api/tests              # every reference case through the 
 python scripts/check_fixture.py              # fixture coverage and boundary values
 ```
 
+The judge and demo tests start the generated API on fixed ports (5080 and 5091). Don't run
+`pytest` while a `fluxora demo`, `fluxora judge` or another `pytest` is running on the same machine,
+or both will see a busy port and fail.
+
 ## AI tools used
 
 AI help is declared step by step in [AI_USAGE.md](AI_USAGE.md).

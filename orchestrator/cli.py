@@ -298,7 +298,8 @@ def demo(
     compared = [p for p in generation.contents if p != "manifest.json" and (ROOT / "generated" / p).is_file()]
     same = [p for p in compared if (ROOT / "generated" / p).read_bytes() == generation.contents[p]]
     typer.echo(f"Wrote {len(generation.contents)} files to {_display(out)}/. "
-               f"{len(same)}/{len(compared)} are byte-identical to the committed generated/ code.")
+               f"{len(same)}/{len(compared)} are byte-identical to the committed generated/ code "
+               f"(manifest.json names the run, so it is not compared).")
     for p in sorted(set(compared) - set(same)):
         typer.secho(f"  differs from committed: {p}", fg=typer.colors.YELLOW)
     if generation.skipped:
