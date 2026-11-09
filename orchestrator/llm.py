@@ -23,6 +23,7 @@ CACHE_DIR = Path(__file__).resolve().parent / "cache"
 PROVIDERS = ("anthropic", "openai")
 MAX_TOKENS = 16000
 OPENAI_DEFAULT_BASE = "https://api.openai.com/v1"
+DEFAULT_TIMEOUT = 300  # seconds; reasoning models can think for minutes
 
 # Server-side refusal fallback is enabled by default for these Claude models.
 FALLBACK_MODELS = {"claude-fable-5-1", "claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5"}
@@ -223,9 +224,12 @@ def _openai_compatible(s: Settings, system: str, prompt: str) -> tuple[str, str]
         headers={"Authorization": f"Bearer {s.api_key}", "Content-Type": "application/json"},
         method="POST",
     )
+    timeout = float(os.environ.get("LLM_TIMEOUT") or DEFAULT_TIMEOUT)
     try:
-        with urllib.request.urlopen(request, timeout=120) as response:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
             data = json.load(response)
+    except TimeoutError:
+        raise LLMError(f"{base} did not answer within {timeout:.0f}s. Set LLM_TIMEOUT higher and rerun; cached answers are kept.") from None
     except urllib.error.HTTPError as e:
         detail = e.read(400).decode("utf-8", "replace")
         raise LLMError(f"{base} returned HTTP {e.code}: {detail}") from None

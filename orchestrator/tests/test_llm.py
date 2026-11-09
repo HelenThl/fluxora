@@ -70,3 +70,16 @@ def test_live_mode_needs_a_known_provider(tmp_path, fake_transport):
     client = LLMClient(settings(provider="other"), cache_dir=tmp_path, transport=fake_transport, log=lambda _: None)
     with pytest.raises(LLMError, match="LLM_PROVIDER"):
         client.complete("Rule: R01\nx")
+
+
+def test_openai_timeout_becomes_a_clear_error(monkeypatch):
+    from orchestrator import llm
+
+    def slow(*_args, **kwargs):
+        assert kwargs["timeout"] == 7.0
+        raise TimeoutError("The read operation timed out")
+
+    monkeypatch.setenv("LLM_TIMEOUT", "7")
+    monkeypatch.setattr(llm.urllib.request, "urlopen", slow)
+    with pytest.raises(LLMError, match="LLM_TIMEOUT"):
+        llm._openai_compatible(settings(provider="openai", base_url="http://example.invalid/v1"), "", "p")

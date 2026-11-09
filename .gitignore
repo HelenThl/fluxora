@@ -29,3 +29,6 @@ runs/*
 # The demo run quoted by the submission docs (its generated/ is byte-identical to generated/)
 !runs/20261108-160920/
 runs/20261108-160920/generated/
+
+# Local, uncommitted LLM cache experiments (keep other models out of orchestrator/cache/)
+.local/

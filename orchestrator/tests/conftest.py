@@ -14,10 +14,15 @@ FIXTURE = ROOT / "fixtures" / "claim-triage"
 LOOPBACK = {"127.0.0.1", "localhost", "::1"}
 
 
-@pytest.fixture(autouse=True)
-def isolated(monkeypatch):
-    """No real LLM settings, no .env, and no network except loopback (the judge's own API)."""
-    for name in ("LLM_PROVIDER", "LLM_API_KEY", "LLM_MODEL", "LLM_BASE_URL"):
+def isolate(monkeypatch):
+    """No real LLM settings, no .env, and no network except loopback (the judge's own API).
+
+    LLM_MODEL stays unset on purpose: that is a fresh clone, so the offline tests also prove the
+    committed cache answers every prompt from a single model.
+
+    Module-scoped fixtures run before the autouse fixture below, so they must call this themselves.
+    """
+    for name in ("LLM_PROVIDER", "LLM_API_KEY", "LLM_MODEL", "LLM_BASE_URL", "LLM_TIMEOUT"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("FLUXORA_NO_DOTENV", "1")
 
@@ -35,6 +40,11 @@ def isolated(monkeypatch):
 
     monkeypatch.setattr(socket, "create_connection", create_connection)
     monkeypatch.setattr(socket.socket, "connect", connect)
+
+
+@pytest.fixture(autouse=True)
+def isolated(monkeypatch):
+    isolate(monkeypatch)
 
 
 class FakeTransport:

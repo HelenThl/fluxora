@@ -9,7 +9,7 @@ from typer.testing import CliRunner
 
 from orchestrator.cli import app
 
-from .conftest import ROOT
+from .conftest import ROOT, isolate
 
 pytestmark = pytest.mark.skipif(shutil.which("dotnet") is None, reason="needs the .NET 8 SDK")
 
@@ -17,7 +17,9 @@ pytestmark = pytest.mark.skipif(shutil.which("dotnet") is None, reason="needs th
 @pytest.fixture(scope="module")
 def demo(tmp_path_factory):
     runs_dir = tmp_path_factory.mktemp("runs")
-    result = CliRunner().invoke(app, ["demo", "--offline", "--port", "5091", "--runs-dir", str(runs_dir)])
+    with pytest.MonkeyPatch.context() as mp:
+        isolate(mp)
+        result = CliRunner().invoke(app, ["demo", "--offline", "--port", "5091", "--runs-dir", str(runs_dir)])
     run_id = re.search(r"DEMO \w+: run (\S+)\.", result.output).group(1)
     return result, runs_dir / run_id
 
