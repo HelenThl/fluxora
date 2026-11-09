@@ -10,8 +10,8 @@
 | Time | On screen | Command / click | Say |
 |---|---|---|---|
 | 0:00–0:15 | Title slide: "Fluxora: Transform. Rebuild. Verify." | none | "Migrating Power Apps is not the hard part. Proving the new app behaves the same is. Fluxora migrates, then shows you the proof, rule by rule." |
-| 0:15–0:25 | Terminal | `fluxora doctor` | "First, a pre-flight check. Dotnet, ports, cache. Ready. Everything runs offline from the repo." |
-| 0:25–0:45 | Terminal, stages 1–3 scrolling | `fluxora demo` | "Transform. The extractor finds eleven rules in the app and the flow. Two things it can't migrate, a toast and an e-mail. It lists them instead of dropping them. Here the approval gate is automatic, and it says so. Rebuild. One C# file per approved rule." |
+| 0:15–0:25 | Terminal | `fluxora doctor --offline` | "First, a pre-flight check. Dotnet, ports, cache. Ready. Everything runs offline from the repo." |
+| 0:25–0:45 | Terminal, stages 1–3 scrolling | `fluxora demo --offline` | "Transform. The extractor finds eleven rules in the app and the flow. Two things it can't migrate, a toast and an e-mail. It lists them instead of dropping them. Here the approval gate is automatic, and it says so. Rebuild. One C# file per approved rule." |
 | 0:45–0:55 | Stage 4 line `VERDICT: PASS  32/32 cases, 11/11 rules` | none | "Verify. Thirty-two reference cases, checked by Microsoft's own Power Fx engine. All green." |
 | 0:55–1:20 | Stage 5: red Parity Court table, row R09 FAIL, line `R09-02  status: expected "Approved", got "Pending approval"` | Scroll up to the red table | "Now we break it on purpose. One character in rule R09: greater-than becomes greater-or-equal. A claim of exactly five thousand pounds now goes to a manager. Parity Court catches it. One case, one rule, named." |
 | 1:20–1:35 | `REPAIR R09 attempt 1/3 [replay: cached LLM response]` and the two-line diff, then `FINAL VERDICT: PASS` | none | "The repair agent may only touch that one rule file. One attempt. One character changed back. Green again. And it says this was a cached answer, not a live call." |
@@ -25,9 +25,12 @@
 
 - [ ] Terminal font 20pt or larger, about 120 columns wide; browser window at least 1440px wide, zoom 100–125%.
 - [ ] `git status` is clean.
-- [ ] `fluxora doctor` says READY. It should show "LLM mode: offline" (no key in `.env`), so every label on screen is honest.
+- [ ] The `.env` keeps a live key, so in the recording shell set `LLM_MODEL` to the committed cache's model first (it wins over `.env`):
+      bash `export LLM_MODEL=claude-code:claude-opus-5-5`, PowerShell `$env:LLM_MODEL = "claude-code:claude-opus-5-5"`.
+      Without this, `--offline` uses the `.env` model and stops at Rebuild with a cache miss.
+- [ ] `fluxora doctor --offline` says READY and shows "LLM mode: offline", so every label on screen is honest.
 - [ ] Ports 5080 and 8765 are free (doctor checks both).
 - [ ] Dashboard built: `cd dashboard && npm install && npm run build`.
-- [ ] One warm-up `fluxora demo` beforehand. The first run after a fresh clone is slower (15.53s, against a median of 11.10s), because it does the first .NET build.
+- [ ] One warm-up `fluxora demo --offline` beforehand. The first run after a fresh clone is slower (15.53s, against a median of 11.10s), because it does the first .NET build.
 - [ ] Note the run ID printed at the end of the recorded run, for `fluxora serve`.
 - [ ] Notifications off; no other terminals showing secrets.

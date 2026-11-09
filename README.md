@@ -96,8 +96,17 @@ fluxora doctor
 
 It checks Python, the .NET 8 SDK, the NuGet packages for an offline first build, free ports, your
 LLM settings (for example `LLM_MODEL` set without a key), that the committed cache answers every
-prompt, the recorded repair patch, and whether the dashboard is built. It ends READY or NOT READY
-and names the fix.
+prompt, the recorded repair patch, and whether the dashboard is built. It ends READY, READY WITH
+WARNINGS or NOT READY, and names the fix.
+
+If your `.env` has a live key you want to keep, run the demo with `--offline` and point `LLM_MODEL`
+at the committed cache's model for that shell (a real environment variable wins over `.env`):
+
+```bash
+export LLM_MODEL=claude-code:claude-opus-5-5   # PowerShell: $env:LLM_MODEL = "claude-code:claude-opus-5-5"
+fluxora doctor --offline
+fluxora demo --offline
+```
 
 ```bash
 fluxora demo
