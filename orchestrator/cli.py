@@ -369,11 +369,14 @@ def demo(
 
 
 @app.command(help="Pre-flight checks before a live demo: Python, .NET 8, NuGet cache, ports, LLM settings, offline cache, recorded patch.")
-def doctor(port: int = typer.Option(verify.DEFAULT_PORT, "--port", help="Port the judge will use.")) -> None:
+def doctor(
+    port: int = typer.Option(verify.DEFAULT_PORT, "--port", help="Port the judge will use."),
+    offline: bool = typer.Option(False, "--offline", help="Check for `fluxora demo --offline` (ignore a live key in .env)."),
+) -> None:
     from .doctor import FAIL, OK, run_checks
 
     typer.secho("fluxora doctor: is this machine ready for `fluxora demo`?", bold=True)
-    checks = run_checks(port=port, root=ROOT)
+    checks = run_checks(port=port, root=ROOT, offline=offline)
     width = max(len(name) for _, name, _ in checks)
     colours = {OK: typer.colors.GREEN, FAIL: typer.colors.RED}
     for status, name, detail in checks:

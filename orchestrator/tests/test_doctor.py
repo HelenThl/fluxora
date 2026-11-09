@@ -44,3 +44,11 @@ def test_doctor_warns_when_a_live_key_is_set(monkeypatch):
     result = CliRunner().invoke(app, ["doctor", "--port", "5091"])
     assert next(l for l in result.output.splitlines() if "LLM mode" in l).startswith("WARN")
     assert "--offline" in result.output
+
+
+def test_doctor_offline_ignores_a_live_key_but_checks_its_model(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "openai")
+    monkeypatch.setenv("LLM_API_KEY", "test-key")
+    result = CliRunner().invoke(app, ["doctor", "--offline", "--port", "5091"])  # conftest leaves LLM_MODEL unset or on the cached model
+    assert next(l for l in result.output.splitlines() if "LLM mode" in l).startswith("OK")
+    assert next(l for l in result.output.splitlines() if "Cache covers the demo" in l).startswith("OK")

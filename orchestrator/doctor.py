@@ -26,7 +26,7 @@ REFERENCE_RUN = ROOT / "runs" / "20261108-143433"
 OK, WARN, FAIL = "OK", "WARN", "FAIL"
 
 
-def run_checks(port: int = DEFAULT_PORT, root: Path = ROOT) -> list[tuple[str, str, str]]:
+def run_checks(port: int = DEFAULT_PORT, root: Path = ROOT, offline: bool = False) -> list[tuple[str, str, str]]:
     checks: list[tuple[str, str, str]] = []
     add = lambda status, name, detail: checks.append((status, name, detail))  # noqa: E731
 
@@ -59,7 +59,7 @@ def run_checks(port: int = DEFAULT_PORT, root: Path = ROOT) -> list[tuple[str, s
         "in use: `fluxora serve --port <other>`" if port_in_use(DASHBOARD_PORT) else "free")
 
     # LLM settings and the offline cache
-    settings = get_settings()
+    settings = get_settings(offline=offline)  # as `fluxora demo --offline` would see them
     if not settings.offline:
         add(WARN, "LLM mode", f"live: {settings.provider}, {settings.model} (check .env). `fluxora demo` will call the "
             "API on any cache miss; for a repeatable offline stage run use `fluxora demo --offline`")
