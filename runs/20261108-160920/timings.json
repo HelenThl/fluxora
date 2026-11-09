@@ -1,0 +1,39 @@
+{
+  "stages": [
+    {
+      "stage": "Transform: extract",
+      "seconds": 0.05,
+      "mode": "cached LLM (11 responses, no API calls)"
+    },
+    {
+      "stage": "Transform: approval gate",
+      "seconds": 0.03,
+      "mode": "auto-approved, no human (use --pause to approve in the dashboard)"
+    },
+    {
+      "stage": "Rebuild: generate",
+      "seconds": 0.07,
+      "mode": "cached LLM (11 responses, no API calls)"
+    },
+    {
+      "stage": "Verify: judge clean code",
+      "seconds": 4.41,
+      "mode": "no LLM (no repair needed)"
+    },
+    {
+      "stage": "Verify: seeded defect + repair",
+      "seconds": 7.49,
+      "mode": "repair: cached LLM (1 attempt(s))"
+    },
+    {
+      "stage": "Evidence: write evidence.md",
+      "seconds": 0.06,
+      "mode": "no LLM"
+    },
+    {
+      "stage": "Total",
+      "seconds": 12.11,
+      "mode": ""
+    }
+  ]
+}

@@ -32,7 +32,8 @@ history shows no human-authored change. All 14 commits carry the trailer
 | M6 | `63a3b98` | Dashboard (Transform / Rebuild / Verify), `fluxora serve`, `fluxora evidence` |
 | M7 | `e676bf2` | `fluxora demo` with labelled per-stage timings, the README, a fresh-clone check |
 | Hardening | `63289ef`, `f5fbb37`, `faadb2d`, `fcbdfbb` | Audit; errors for a missing .NET SDK and a busy port; cache-miss messages; `fluxora doctor` |
-| Submission pack | this commit | `docs/` (architecture, Responsible AI note, measurements, demo script, deck outline) and this file |
+| Evidence timings fix | see `git log` ("Keep demo stage timings…") | `fluxora evidence` re-run on its own dropped the demo's per-stage timings; they are now saved to `runs/<id>/timings.json` and reprinted. Run `20261108-160920`'s timings were copied from its own committed evidence.md, not re-measured. Found during an M6 check. |
+| Submission pack | `eaf5d57` | `docs/` (architecture, Responsible AI note, measurements, demo script, deck outline) and this file |
 
 ### Decisions the team made in the build session
 

@@ -246,7 +246,17 @@ def render_markdown(run: dict, demo_timings: list[dict] | None = None) -> str:
     return "\n".join(out) + "\n"
 
 
+TIMINGS_FILE = "timings.json"
+
+
 def write_evidence(run_dir: Path, root: Path = ROOT, demo_timings: list[dict] | None = None) -> Path:
+    """Write evidence.md. Demo stage timings are kept in timings.json so a later
+    `fluxora evidence` run reprints the measured numbers instead of dropping them."""
+    timings_path = run_dir / TIMINGS_FILE
+    if demo_timings:
+        timings_path.write_text(json.dumps({"stages": demo_timings}, indent=2) + "\n", encoding="utf-8", newline="\n")
+    else:
+        demo_timings = (_load(timings_path) or {}).get("stages")
     run = load_run(run_dir, root)
     path = run_dir / "evidence.md"
     path.write_text(render_markdown(run, demo_timings), encoding="utf-8", newline="\n")

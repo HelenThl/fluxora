@@ -9,7 +9,7 @@ import pytest
 from typer.testing import CliRunner
 
 from orchestrator.cli import app
-from orchestrator.evidence import load_run, render_markdown
+from orchestrator.evidence import load_run, render_markdown, write_evidence
 from orchestrator.serve import make_server
 
 from .conftest import ROOT
@@ -57,6 +57,19 @@ def test_cli_evidence_writes_the_file(run_copy):
     result = CliRunner().invoke(app, ["evidence", RUN_ID, "--runs-dir", str(run_copy.parent)])
     assert result.exit_code == 0, result.output
     assert (run_copy / "evidence.md").read_text(encoding="utf-8").startswith(f"# Fluxora evidence: run {RUN_ID}")
+
+
+def test_demo_timings_survive_a_later_evidence_run(run_copy):
+    stages = [{"stage": "Verify: judge clean code", "seconds": 4.41, "mode": "no LLM"},
+              {"stage": "Total", "seconds": 4.41, "mode": ""}]
+    write_evidence(run_copy, ROOT, demo_timings=stages)
+    assert json.loads((run_copy / "timings.json").read_text(encoding="utf-8")) == {"stages": stages}
+
+    result = CliRunner().invoke(app, ["evidence", RUN_ID, "--runs-dir", str(run_copy.parent)])
+    assert result.exit_code == 0, result.output
+    text = (run_copy / "evidence.md").read_text(encoding="utf-8")
+    assert "| Verify: judge clean code | 4.41 | no LLM |" in text
+    assert "| Total | 4.41 |  |" in text
 
 
 # --- serve ----------------------------------------------------------------------------------------
