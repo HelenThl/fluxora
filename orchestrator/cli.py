@@ -14,14 +14,16 @@ import typer
 
 from . import generate as rebuild
 from . import judge as verify
+from . import migrate as data_migration
 from . import register, repair, serve as dashboard
-from .evidence import write_evidence
+from .evidence import generated_dir_for, write_evidence
 from .extract import ExtractError, build_register
 from .llm import LLMClient, LLMError, get_settings
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_RUNS = ROOT / "runs"
 DEFAULT_GENERATED = ROOT / "generated"
+DEMO_STAGES = 7
 
 app = typer.Typer(
     help="Fluxora: Transform. Rebuild. Verify. Migrate a Power App and prove it behaves the same, rule by rule.",
@@ -123,6 +125,39 @@ def generate(
     typer.echo(f"Wrote {len(result.files)} files to {_display(out)}/")
 
 
+@app.command(help="Rebuild: migrate the Dataverse rows to Cosmos DB Claim documents, quarantine bad rows, reconcile. Writes migration.json.")
+def migrate(
+    run_id: str = typer.Argument(..., help="Run ID to migrate data for (uses its fixture and generated API)."),
+    runs_dir: Path = typer.Option(DEFAULT_RUNS, "--runs-dir", hidden=True),
+) -> None:
+    path = register.rules_path(runs_dir, run_id)
+    if not path.is_file():
+        _fail(f"No register for run {run_id} at {path}")
+    fixture = Path(register.load(path)["fixture"])
+    fixture = fixture if fixture.is_absolute() else ROOT / fixture
+    typer.echo(f"Rebuild: migrating {data_migration.RECORDS_FILE} to Cosmos DB documents for run {run_id}")
+    try:
+        report = data_migration.run_migration(fixture, generated_dir_for(path.parent, ROOT), path.parent)
+    except data_migration.MigrationError as e:
+        _fail(str(e))
+    _print_migration(report)
+    typer.echo(f"\nWrote {_display(path.parent / data_migration.DOCUMENTS_FILE)} and {_display(path.parent / data_migration.REPORT_FILE)}")
+    raise typer.Exit(0 if report["result"] == "PASS" else 1)
+
+
+def _print_migration(report: dict) -> None:
+    c = report["counts"]
+    typer.echo(f"Read {c['read']} rows from {report['source']['table']}: {c['migrated']} migrated, {c['quarantined']} quarantined.")
+    for q in report["quarantined"]:
+        typer.secho(f"  QUARANTINED  {q['claimId'] or q['record']}  {'; '.join(q['reasons'])}", fg=typer.colors.YELLOW)
+    for d in report["defaulted"]:
+        typer.echo(f"  defaulted    {d['column']} = {json.dumps(d['value'])} on row {d['record']} (schema default)")
+    typer.echo("Reconciliation:")
+    for check in report["reconciliation"]["checks"]:
+        typer.secho(f"  {'PASS' if check['pass'] else 'FAIL'}", fg=typer.colors.GREEN if check["pass"] else typer.colors.RED, bold=True, nl=False)
+        typer.echo(f"  {check['check']}: {check['detail']}")
+    typer.secho(f"MIGRATION: {report['result']}", fg=typer.colors.GREEN if report["result"] == "PASS" else typer.colors.RED, bold=True)
+
 @app.command(help="Verify: judge the migrated API against every reference case, repair failing rules (max 3 attempts), write parity.json and repairs.json.")
 def judge(
     run_id: str = typer.Argument(..., help="Run ID whose register to judge."),
@@ -218,7 +253,7 @@ def serve(
         server.server_close()
 
 
-@app.command(help="Run the whole pipeline: Transform, approve, Rebuild, Verify (clean, then with the seeded defect and repair), evidence. Times every stage.")
+@app.command(help="Run the whole pipeline: Transform, approve, Rebuild (code and data), Verify (clean, then with the seeded defect and repair), evidence. Times every stage.")
 def demo(
     pause: bool = typer.Option(False, "--pause", help="Wait for you to approve the rules in the dashboard instead of auto-approving."),
     offline: bool = typer.Option(False, "--offline", help="Never call an LLM; use only the committed cache and recorded patch."),
@@ -237,7 +272,7 @@ def demo(
 
     def begin(number: int, title: str) -> tuple[float, int, int]:
         typer.echo("")
-        typer.secho(f"== {number}/6  {title} ==", bold=True)
+        typer.secho(f"== {number}/{DEMO_STAGES}  {title} ==", bold=True)
         return time.perf_counter(), client.cache_hits, client.live_calls
 
     def finish(title: str, started: tuple[float, int, int], mode: str | None = None) -> None:
@@ -306,6 +341,15 @@ def demo(
         typer.secho("Skipped (not approved): " + ", ".join(f"{i} ({st})" for i, st in generation.skipped), fg=typer.colors.YELLOW)
     finish("Rebuild: generate", s)
 
+    # 4. Rebuild: data migration
+    s = begin(4, "Rebuild: migrate Dataverse rows to Cosmos DB documents and reconcile")
+    try:
+        migration = data_migration.run_migration(fixture, out, rules_path.parent)
+    except data_migration.MigrationError as e:
+        _fail(str(e))
+    _print_migration(migration)
+    finish("Rebuild: migrate data", s, "no LLM")
+
     def court(seed: str | None, printing: bool):
         def on_verdict(stage: str, verdict) -> None:
             if printing and stage == "initial":
@@ -320,8 +364,8 @@ def demo(
         except (verify.JudgeError, repair.RepairError) as e:
             _fail(str(e))
 
-    # 4. Verify: clean
-    s = begin(4, "Verify: Parity Court on the generated code")
+    # 5. Verify: clean
+    s = begin(5, "Verify: Parity Court on the generated code")
     clean = court(None, printing=False)
     summary = clean.parity["summary"]
     typer.secho(
@@ -333,8 +377,8 @@ def demo(
     shutil.copyfile(rules_path.parent / "parity.json", rules_path.parent / "parity-clean.json")
     finish("Verify: judge clean code", s, _repair_mode(clean.attempts))
 
-    # 5. Verify: seeded defect, repair
-    s = begin(5, "Verify: seed a defect, watch Parity Court go red, repair, go green")
+    # 6. Verify: seeded defect, repair
+    s = begin(6, "Verify: seed a defect, watch Parity Court go red, repair, go green")
     seeded = court("threshold", printing=True)
     if seeded.attempts:
         _print_court(seeded.parity, "PARITY COURT  (after repair)", "Final verdict")
@@ -346,8 +390,8 @@ def demo(
         typer.secho(f"UNRESOLVED: {', '.join(fix['unresolved'])}", fg=typer.colors.RED, bold=True)
     finish("Verify: seeded defect + repair", s, _repair_mode(seeded.attempts))
 
-    # 6. Evidence
-    s = begin(6, "Evidence page")
+    # 7. Evidence
+    s = begin(7, "Evidence page")
     write_evidence(rules_path.parent, ROOT, demo_timings=stages)
     finish("Evidence: write evidence.md", s, "no LLM")
     total = time.perf_counter() - demo_start
@@ -361,7 +405,7 @@ def demo(
     typer.echo(f"{'Stage':<{width}}  {'Seconds':>8}  Mode")
     for row in rows:
         typer.echo(f"{row['stage']:<{width}}  {row['seconds']:>8.2f}  {row['mode']}")
-    passed = clean.passed and seeded.passed
+    passed = clean.passed and seeded.passed and migration["result"] == "PASS"
     typer.echo("")
     typer.secho(f"DEMO {'PASSED' if passed else 'FAILED'}: run {run_id}.  See it: fluxora serve {run_id}",
                 fg=typer.colors.GREEN if passed else typer.colors.RED, bold=True)

@@ -31,7 +31,8 @@ def test_demo_goes_green_then_red_then_green(demo):
     assert "VERDICT: PASS  32/32 cases, 11/11 rules" in out  # clean code
     assert "INITIAL VERDICT: FAIL" in out and "R09-02  status: expected \"Approved\", got \"Pending approval\"" in out
     assert "FINAL VERDICT: PASS" in out
-    assert "30/30 are byte-identical to the committed generated/ code" in out
+    assert "Read 40 rows from fx_claim: 33 migrated, 7 quarantined." in out and "MIGRATION: PASS" in out
+    assert "32/32 are byte-identical to the committed generated/ code" in out
 
 
 def test_demo_labels_every_stage_honestly(demo):
@@ -43,6 +44,7 @@ def test_demo_labels_every_stage_honestly(demo):
         ("Transform: extract", "cached LLM"),
         ("Transform: approval gate", "auto-approved, no human"),
         ("Rebuild: generate", "cached LLM"),
+        ("Rebuild: migrate data", "no LLM"),
         ("Verify: judge clean code", "no LLM"),
         ("Verify: seeded defect + repair", "repair: cached LLM"),
         ("Total", ""),
@@ -51,6 +53,7 @@ def test_demo_labels_every_stage_honestly(demo):
 
     evidence = (run_dir / "evidence.md").read_text(encoding="utf-8")
     assert "| Rebuild: generate |" in evidence and "| Total |" in evidence and "cached LLM" in evidence
+    assert "| Rebuild: migrate data |" in evidence and "## Data migration" in evidence
 
 
 def test_busy_port_stops_the_demo_before_any_work(tmp_path):

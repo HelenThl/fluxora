@@ -1,0 +1,188 @@
+{
+  "migratedAt": "2026-11-10T15:40:44Z",
+  "source": {
+    "path": "fixtures/claim-triage/dataverse-records.json",
+    "table": "fx_claim",
+    "entitySet": "fx_claims",
+    "sha256Before": "95990701845cfc6f42bd3c5f0f6e67211a4cd1bcc5ea92eac37e3399a7ed63dd",
+    "sha256After": "95990701845cfc6f42bd3c5f0f6e67211a4cd1bcc5ea92eac37e3399a7ed63dd"
+  },
+  "target": {
+    "store": "Cosmos DB",
+    "document": "api/Data/ClaimDocument.cs",
+    "id": "id",
+    "partitionKey": "/policyNumber",
+    "file": "migrated-claims.json",
+    "sha256": "df233231a44a437a97506911345bc0d97d188c5006d1d45f5575150c58f9a40b"
+  },
+  "mapping": [
+    {
+      "from": "fx_claimid",
+      "to": "id",
+      "type": "String"
+    },
+    {
+      "from": "fx_policynumber",
+      "to": "policyNumber",
+      "type": "String"
+    },
+    {
+      "from": "fx_claimtype",
+      "to": "claimType",
+      "type": "Picklist",
+      "options": {
+        "100000000": "Motor",
+        "100000001": "Home",
+        "100000002": "Travel"
+      }
+    },
+    {
+      "from": "fx_policystartdate",
+      "to": "policyStartDate",
+      "type": "DateTime"
+    },
+    {
+      "from": "fx_incidentdate",
+      "to": "incidentDate",
+      "type": "DateTime"
+    },
+    {
+      "from": "fx_reporteddate",
+      "to": "reportedDate",
+      "type": "DateTime"
+    },
+    {
+      "from": "fx_claimamount",
+      "to": "claimAmount",
+      "type": "Money"
+    },
+    {
+      "from": "fx_hasreceipt",
+      "to": "hasReceipt",
+      "type": "Boolean"
+    },
+    {
+      "from": "fx_status",
+      "to": "status",
+      "type": "Picklist",
+      "options": {
+        "100000000": "Not covered",
+        "100000001": "Below excess",
+        "100000002": "Manual review",
+        "100000003": "Pending approval",
+        "100000004": "Approved"
+      }
+    }
+  ],
+  "counts": {
+    "read": 40,
+    "migrated": 33,
+    "quarantined": 7
+  },
+  "quarantined": [
+    {
+      "row": 4,
+      "record": "881729de-53f0-47bd-8e46-d2c93a8a751f",
+      "claimId": "CLM-900005",
+      "reasons": [
+        "fx_claimid: CLM-900005 is on 2 rows; it becomes the Cosmos document id, so one row would overwrite the other. A person must decide which is correct"
+      ]
+    },
+    {
+      "row": 11,
+      "record": "ff4265e2-bdd5-490a-83bb-f77a34d2761b",
+      "claimId": "CLM-900005",
+      "reasons": [
+        "fx_claimid: CLM-900005 is on 2 rows; it becomes the Cosmos document id, so one row would overwrite the other. A person must decide which is correct"
+      ]
+    },
+    {
+      "row": 14,
+      "record": "f166cf91-c0ac-4264-b724-84fb2f632ebc",
+      "claimId": "CLM-900015",
+      "reasons": [
+        "fx_claimtype: option value 100000007 is not in the schema's option set"
+      ]
+    },
+    {
+      "row": 21,
+      "record": "bd5b8140-37f0-47e4-a1bc-3778253f207a",
+      "claimId": "CLM-900022",
+      "reasons": [
+        "fx_claimamount: required value is missing"
+      ]
+    },
+    {
+      "row": 25,
+      "record": "07135840-5075-414a-9f2c-8fcfd489a6d5",
+      "claimId": "CLM-900026",
+      "reasons": [
+        "fx_claimamount: 1234.567 has more than 2 decimal places"
+      ]
+    },
+    {
+      "row": 27,
+      "record": "760b27b7-a25f-4ecb-8287-28063fbcadb2",
+      "claimId": "CLM-900028",
+      "reasons": [
+        "fx_policynumber: 24 characters, longer than the column's maxLength 20"
+      ]
+    },
+    {
+      "row": 33,
+      "record": "0ac885d2-0eeb-440c-99d9-203da40590f7",
+      "claimId": "CLM-900034",
+      "reasons": [
+        "fx_incidentdate: \"2026-02-30\" is not a valid date (YYYY-MM-DD)"
+      ]
+    }
+  ],
+  "defaulted": [
+    {
+      "record": "2cb36fb5-390b-4163-ba8d-e06fd001b115",
+      "column": "fx_hasreceipt",
+      "value": false
+    }
+  ],
+  "reconciliation": {
+    "result": "PASS",
+    "checks": [
+      {
+        "check": "Every row accounted for",
+        "pass": true,
+        "detail": "40 read = 33 migrated + 7 quarantined"
+      },
+      {
+        "check": "Document ids unique",
+        "pass": true,
+        "detail": "33 distinct ids for 33 documents"
+      },
+      {
+        "check": "Round trip: each document maps back to its row",
+        "pass": true,
+        "detail": "297 values compared, 0 differ"
+      },
+      {
+        "check": "Control total: claimAmount",
+        "pass": true,
+        "detail": "source £73,488.28, documents £73,488.28"
+      },
+      {
+        "check": "Counts by claimType",
+        "pass": true,
+        "detail": "Home 11, Motor 11, Travel 11"
+      },
+      {
+        "check": "Counts by status",
+        "pass": true,
+        "detail": "(blank) 1, Approved 14, Below excess 4, Manual review 10, Not covered 2, Pending approval 2"
+      },
+      {
+        "check": "Source unchanged",
+        "pass": true,
+        "detail": "sha256 95990701845c"
+      }
+    ]
+  },
+  "result": "PASS"
+}

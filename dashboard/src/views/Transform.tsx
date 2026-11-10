@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { RunData } from "../types";
-import { Badge, Section, VerdictBadge } from "../ui";
+import { Badge, Section, VerdictBadge, buttonGhost, buttonPrimary, td, th } from "../ui";
 
 const confidenceTone = { high: "good", medium: "warn", low: "bad" } as const;
 
@@ -36,7 +36,7 @@ export default function Transform({ run, focus, onChange }: { run: RunData; focu
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <Section
         title="Rule Register"
         subtitle={
@@ -50,28 +50,28 @@ export default function Transform({ run, focus, onChange }: { run: RunData; focu
             type="button"
             onClick={() => decide({ all: true }, "all")}
             disabled={busy !== null}
-            className="rounded-lg bg-emerald-700 px-4 py-2 font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
+            className={buttonPrimary}
           >
             {busy === "all" ? "Approving…" : `Approve all${pending ? ` (${pending} not yet approved)` : ""}`}
           </button>
         }
       >
         {message && (
-          <p role="status" className="mb-3 rounded-md bg-slate-100 px-3 py-2 text-slate-800">
+          <p role="status" className="mb-4 rounded-md bg-zinc-50 px-3 py-2 text-[13px] text-zinc-700 ring-1 ring-inset ring-zinc-200">
             {message}
           </p>
         )}
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
+          <table className="w-full border-collapse text-left text-[13px] leading-5">
             <thead>
-              <tr className="border-b border-slate-300 text-sm uppercase tracking-wide text-slate-500">
-                <th className="py-2 pr-3">ID</th>
-                <th className="py-2 pr-3">Rule (plain English)</th>
-                <th className="py-2 pr-3">Formula</th>
-                <th className="py-2 pr-3">Source</th>
-                <th className="py-2 pr-3">Confidence</th>
-                <th className="py-2 pr-3">Status</th>
-                <th className="py-2">Decision</th>
+              <tr className="border-b border-zinc-200">
+                <th className={th}>ID</th>
+                <th className={th}>Rule (plain English)</th>
+                <th className={th}>Formula</th>
+                <th className={th}>Source</th>
+                <th className={th}>Confidence</th>
+                <th className={th}>Status</th>
+                <th className={th}>Decision</th>
               </tr>
             </thead>
             <tbody>
@@ -81,32 +81,32 @@ export default function Transform({ run, focus, onChange }: { run: RunData; focu
                   <tr
                     key={rule.id}
                     id={`rule-${rule.id}`}
-                    className={`border-b border-slate-200 align-top ${focus === rule.id ? "bg-amber-50" : ""}`}
+                    className={`border-b border-zinc-100 last:border-0 ${focus === rule.id ? "bg-amber-50/70" : "hover:bg-zinc-50/60"}`}
                   >
-                    <td className="py-3 pr-3 font-mono font-bold">{rule.id}</td>
-                    <td className="max-w-md py-3 pr-3">{rule.rule}</td>
-                    <td className="max-w-xs py-3 pr-3">
-                      <code className="break-words font-mono text-sm text-slate-700">{rule.formula}</code>
+                    <td className={`${td} font-mono text-xs font-semibold text-zinc-900`}>{rule.id}</td>
+                    <td className={`${td} max-w-md text-zinc-800`}>{rule.rule}</td>
+                    <td className={`${td} max-w-xs`}>
+                      <code className="box-decoration-clone break-words rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-xs leading-6 text-zinc-700">{rule.formula}</code>
                     </td>
-                    <td className="max-w-xs py-3 pr-3 text-sm">
-                      <div className="font-semibold">{rule.source.file}</div>
-                      <div className="break-all font-mono text-slate-600">{rule.source.ref}</div>
+                    <td className={`${td} max-w-xs text-xs`}>
+                      <div className="font-medium text-zinc-700">{rule.source.file}</div>
+                      <div className="break-all font-mono text-2xs text-zinc-400">{rule.source.ref}</div>
                     </td>
-                    <td className="py-3 pr-3">
+                    <td className={td}>
                       <Badge tone={confidenceTone[rule.confidence]}>{rule.confidence}</Badge>
                     </td>
-                    <td className="py-3 pr-3">
+                    <td className={td}>
                       <VerdictBadge status={rule.status} />
-                      {decided && <div className="mt-1 whitespace-nowrap text-xs text-slate-500">{decided.at}</div>}
+                      {decided && <div className="mt-1 whitespace-nowrap font-mono text-2xs text-zinc-400">{decided.at}</div>}
                     </td>
-                    <td className="py-3">
-                      <div className="flex gap-2">
+                    <td className="py-3 align-top">
+                      <div className="flex gap-1.5">
                         <button
                           type="button"
                           aria-label={`Approve ${rule.id}`}
                           disabled={busy !== null || rule.status === "approved"}
                           onClick={() => decide({ approve: [rule.id] }, rule.id)}
-                          className="rounded-md border border-emerald-600 px-3 py-1 font-semibold text-emerald-800 hover:bg-emerald-50 disabled:opacity-40"
+                          className={`${buttonGhost} text-emerald-700`}
                         >
                           Approve
                         </button>
@@ -115,7 +115,7 @@ export default function Transform({ run, focus, onChange }: { run: RunData; focu
                           aria-label={`Reject ${rule.id}`}
                           disabled={busy !== null || rule.status === "rejected"}
                           onClick={() => decide({ reject: [rule.id] }, rule.id)}
-                          className="rounded-md border border-red-600 px-3 py-1 font-semibold text-red-800 hover:bg-red-50 disabled:opacity-40"
+                          className={`${buttonGhost} text-red-700`}
                         >
                           Reject
                         </button>
@@ -127,7 +127,7 @@ export default function Transform({ run, focus, onChange }: { run: RunData; focu
             </tbody>
           </table>
         </div>
-        <p className="mt-3 text-sm text-slate-600">
+        <p className="mt-4 text-xs leading-5 text-zinc-500">
           Sentences and confidence: {register.ruleTextModel}. Everything else in the register is parsed from the fixture by code.
           Every decision is appended to <span className="font-mono">rules.json</span> with a UTC timestamp ({register.approvals.length} so far).
         </p>
@@ -137,17 +137,17 @@ export default function Transform({ run, focus, onChange }: { run: RunData; focu
         title="Unsupported items"
         subtitle="The extractor saw these but cannot migrate them. They are listed, never dropped."
       >
-        <ul className="space-y-3">
+        <ul className="divide-y divide-zinc-100 overflow-hidden rounded-lg border border-zinc-200/80">
           {register.unsupported.map((item) => (
-            <li key={`${item.file}#${item.ref}`} className="rounded-lg border border-amber-300 bg-amber-50 p-4">
+            <li key={`${item.file}#${item.ref}`} className="px-4 py-3">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone="warn">UNSUPPORTED</Badge>
-                <code className="font-mono font-semibold">{item.construct}</code>
-                <span className="text-sm text-slate-600">
+                <code className="font-mono text-[13px] font-medium text-zinc-900">{item.construct}</code>
+                <span className="text-xs text-zinc-400">
                   {item.file} <span className="font-mono">{item.ref}</span>
                 </span>
               </div>
-              <p className="mt-2">{item.reason}</p>
+              <p className="mt-1 text-[13px] text-zinc-600">{item.reason}</p>
             </li>
           ))}
         </ul>

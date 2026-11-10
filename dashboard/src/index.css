@@ -2,15 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Projector-friendly: everything scales from a larger root size. */
-html {
-  font-size: 112.5%;
+/* 14px body text with a quiet, neutral palette. Numbers line up in tables and stats. */
+body {
+  @apply bg-zinc-50 text-sm leading-6 text-zinc-800 antialiased;
+  font-feature-settings: "cv11", "ss01";
+  font-variant-numeric: tabular-nums;
 }
 
-body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+code,
+pre,
+.font-mono {
+  font-variant-ligatures: none;
 }
 
 :focus-visible {
-  @apply outline outline-2 outline-offset-2 outline-blue-600;
+  @apply rounded-sm outline outline-2 outline-offset-2 outline-indigo-500;
 }

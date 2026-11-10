@@ -112,15 +112,24 @@ fluxora demo --offline
 fluxora demo
 ```
 
-It runs the whole pipeline in six timed stages:
+It runs the whole pipeline in seven timed stages:
 
 1. **Transform: extract.** 11 rules and 2 unsupported items, in a new run under `runs/<run-id>/`.
 2. **Transform: approval gate.** This is auto-approved, and the demo says so loudly. Use
    `fluxora demo --pause` to approve each rule yourself in the dashboard.
-3. **Rebuild: generate.** 31 files go into `runs/<run-id>/generated/`. The demo also checks they are
+3. **Rebuild: generate.** 33 files go into `runs/<run-id>/generated/`. The demo also checks they are
    byte-identical to the committed `generated/` code.
-4. **Verify on clean code.** VERDICT: PASS, 32/32 cases and 11/11 rules.
-5. **Verify with a seeded defect.** R09's `>` is changed to `>=` in a working copy, so a claim of
+4. **Rebuild: migrate data.** The 40 synthetic Dataverse rows in
+   `fixtures/claim-triage/dataverse-records.json` become Cosmos DB `Claim` documents
+   (`runs/<run-id>/migrated-claims.json`). The mapping comes from `dataverse-schema.json`, and the
+   documents are checked against the generated `ClaimDocument.cs`. 7 rows carry planted problems
+   (a duplicate claim ID, an unknown option value, a missing amount, 3 decimal places, an over-long
+   policy number, an impossible date). They are quarantined with a reason, never dropped or guessed.
+   Reconciliation then reads the documents back: every row accounted for, unique ids, a field-by-field
+   round trip, the money control total, counts by type and status, and the source file unchanged.
+   `MIGRATION: PASS`, written to `migration.json`.
+5. **Verify on clean code.** VERDICT: PASS, 32/32 cases and 11/11 rules.
+6. **Verify with a seeded defect.** R09's `>` is changed to `>=` in a working copy, so a claim of
    exactly £5,000 wrongly goes to a manager. Parity Court goes red on that one case, and only R09 is
    blamed:
 
@@ -135,7 +144,7 @@ It runs the whole pipeline in six timed stages:
      -> fixed  cases 32/32
    FINAL VERDICT: PASS
    ```
-6. **Evidence.** `runs/<run-id>/evidence.md` is written.
+7. **Evidence.** `runs/<run-id>/evidence.md` is written, including the migration report.
 
 It ends with a table of measured wall-clock times. Each row says whether the LLM answered live, from
 the cache, or by replay. Here is one measured run, offline with the cached LLM on a Windows 11
@@ -157,7 +166,8 @@ Then look at the result:
 fluxora serve <run-id>         # http://127.0.0.1:8765/ (build the dashboard first)
 ```
 
-The exit code is 0 only if both the clean and the seeded Parity Court end green.
+The exit code is 0 only if both the clean and the seeded Parity Court end green and the migration
+reconciles.
 
 ## Commands, one stage at a time
 
@@ -167,6 +177,7 @@ fluxora approve <run-id> --all [--reject R05]     # human gate, timestamped deci
 fluxora generate <run-id> [--offline]             # Rebuild -> generated/
 fluxora judge <run-id>                            # Verify -> parity.json, repairs.json
 fluxora judge <run-id> --seed-defect threshold    # the red-to-green moment
+fluxora migrate <run-id>                          # Rebuild (data) -> migrated-claims.json, migration.json
 fluxora evidence <run-id>                         # -> runs/<run-id>/evidence.md
 fluxora serve [<run-id>]                          # dashboard on http://127.0.0.1:8765/
 fluxora doctor                                    # pre-flight checks before presenting
@@ -265,9 +276,24 @@ flow conditions. It is not a general Power Fx compiler.
 ## Tests and checks
 
 ```bash
-pytest                                       # 75 tests; the judge, repair, demo and doctor tests need the .NET SDK
+pytest                                       # 89 tests; the judge, repair, demo and doctor tests need the .NET SDK
 dotnet test generated/api/tests              # every reference case through the generated Evaluator
 python scripts/check_fixture.py              # fixture coverage and boundary values
+```
+
+UI test of the migrated React form (needs Node.js and the .NET SDK). It starts the API and the form
+on their own ports (5093 and 5174), fills the form in a real browser for every reference case, and
+checks the status, excess, payable, late-report flag and errors on the page. The expected values
+come from `reference-cases.json`, not from the test. 28 cases run. 4 are skipped with a printed
+reason, because the form can't express them: a claim type outside the drop-down, or a result that
+depends on a fixed "today". Parity Court covers those through the API.
+
+```bash
+cd generated/web
+npm install
+npx playwright install chromium              # once per machine
+npm run test:ui                              # 28 passed, 4 skipped
+cd ../..
 ```
 
 The judge and demo tests start the generated API on fixed ports (5080 and 5091). Don't run

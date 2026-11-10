@@ -1,6 +1,6 @@
 """fluxora serve: a tiny standard-library HTTP server for the dashboard (localhost only).
 
-GET  /api/run              rules.json, parity.json, repairs.json, generated/manifest.json and the evidence summary
+GET  /api/run              rules.json, parity.json, repairs.json, migration.json, generated/manifest.json and the evidence summary
 GET  /api/file?path=...    one generated file listed in generated/manifest.json (read-only)
 GET  /runs/<id>/<file>     the run's JSON artefacts as they are on disk
 POST /api/approve          {"approve": [...], "reject": [...], "all": bool}: timestamped decisions into rules.json
@@ -21,7 +21,7 @@ from .evidence import generated_dir_for, load_run
 ROOT = Path(__file__).resolve().parent.parent
 DASHBOARD_DIST = ROOT / "dashboard" / "dist"
 DEFAULT_PORT = 8765
-RUN_FILES = {"rules.json", "parity.json", "repairs.json"}
+RUN_FILES = {"rules.json", "parity.json", "repairs.json", "migration.json", "migrated-claims.json"}
 CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
     ".js": "text/javascript; charset=utf-8",

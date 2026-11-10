@@ -4,8 +4,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["system-ui", "-apple-system", "Segoe UI", "sans-serif"],
-        mono: ["ui-monospace", "Cascadia Mono", "Consolas", "monospace"],
+        sans: ["Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Helvetica Neue", "sans-serif"],
+        mono: ["ui-monospace", "SF Mono", "JetBrains Mono", "Cascadia Mono", "Menlo", "Consolas", "monospace"],
+      },
+      fontSize: {
+        "2xs": ["0.6875rem", { lineHeight: "1rem" }],
       },
     },
   },
