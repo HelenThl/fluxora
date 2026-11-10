@@ -2,17 +2,40 @@
 import type { ReactNode } from "react";
 
 const tones = {
-  good: "bg-emerald-50 text-emerald-800 ring-emerald-300",
-  bad: "bg-red-50 text-red-800 ring-red-300",
-  warn: "bg-amber-50 text-amber-900 ring-amber-300",
-  info: "bg-sky-50 text-sky-900 ring-sky-300",
-  muted: "bg-slate-100 text-slate-700 ring-slate-300",
+  good: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+  bad: "bg-red-50 text-red-700 ring-red-600/20",
+  warn: "bg-amber-50 text-amber-800 ring-amber-600/25",
+  info: "bg-indigo-50 text-indigo-700 ring-indigo-600/20",
+  muted: "bg-zinc-50 text-zinc-600 ring-zinc-500/20",
 } as const;
 export type Tone = keyof typeof tones;
 
+const dots: Record<Tone, string> = {
+  good: "bg-emerald-500",
+  bad: "bg-red-500",
+  warn: "bg-amber-500",
+  info: "bg-indigo-500",
+  muted: "bg-zinc-400",
+};
+
+const values: Record<Tone, string> = {
+  good: "text-emerald-700",
+  bad: "text-red-700",
+  warn: "text-amber-700",
+  info: "text-zinc-900",
+  muted: "text-zinc-900",
+};
+
+export function Dot({ tone }: { tone: Tone }) {
+  return <span aria-hidden="true" className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${dots[tone]}`} />;
+}
+
 export function Badge({ tone, children, title }: { tone: Tone; children: ReactNode; title?: string }) {
   return (
-    <span title={title} className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-sm font-semibold ring-1 ring-inset ${tones[tone]}`}>
+    <span
+      title={title}
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded px-1.5 py-px text-2xs font-medium ring-1 ring-inset ${tones[tone]}`}
+    >
       {children}
     </span>
   );
@@ -26,7 +49,7 @@ export function verdictTone(status: string): Tone {
 }
 
 export function VerdictBadge({ status }: { status: string }) {
-  const mark = status === "PASS" || status === "approved" || status === "fixed" ? "✓" : status === "FAIL" || status === "UNRESOLVED" || status === "rejected" ? "✗" : "•";
+  const mark = status === "PASS" || status === "approved" || status === "fixed" ? "✓" : status === "FAIL" || status === "UNRESOLVED" || status === "rejected" ? "✕" : "•";
   return (
     <Badge tone={verdictTone(status)}>
       <span aria-hidden="true">{mark}</span>
@@ -49,11 +72,11 @@ export function OracleBadge({ oracle }: { oracle: string }) {
 
 export function Section({ title, subtitle, children, actions }: { title: string; subtitle?: ReactNode; children: ReactNode; actions?: ReactNode }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold">{title}</h2>
-          {subtitle && <p className="mt-1 text-slate-600">{subtitle}</p>}
+    <section className="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:p-6">
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 max-w-3xl">
+          <h2 className="text-[15px] font-semibold tracking-tight text-zinc-900">{title}</h2>
+          {subtitle && <p className="mt-1 text-[13px] leading-5 text-zinc-500">{subtitle}</p>}
         </div>
         {actions}
       </div>
@@ -62,13 +85,17 @@ export function Section({ title, subtitle, children, actions }: { title: string;
   );
 }
 
+export function SubHeading({ children }: { children: ReactNode }) {
+  return <h3 className="text-2xs font-semibold uppercase tracking-wider text-zinc-400">{children}</h3>;
+}
+
 export function Diff({ text }: { text: string }) {
   const lines = text.split("\n").filter((l) => l && !l.startsWith("+++") && !l.startsWith("---"));
   return (
-    <pre className="overflow-x-auto rounded-lg bg-slate-900 p-3 font-mono text-sm leading-6 text-slate-100" aria-label="Unified diff">
+    <pre className="overflow-x-auto rounded-lg bg-zinc-950 px-4 py-3 font-mono text-xs leading-5 text-zinc-300" aria-label="Unified diff">
       {lines.map((line, i) => {
         const kind = line.startsWith("+") ? "add" : line.startsWith("-") ? "del" : line.startsWith("@@") ? "hunk" : "ctx";
-        const cls = kind === "add" ? "bg-emerald-900/60 text-emerald-200" : kind === "del" ? "bg-red-900/60 text-red-200" : kind === "hunk" ? "text-sky-300" : "";
+        const cls = kind === "add" ? "-mx-4 px-4 bg-emerald-500/15 text-emerald-300" : kind === "del" ? "-mx-4 px-4 bg-red-500/15 text-red-300" : kind === "hunk" ? "text-indigo-300/80" : "";
         const label = kind === "add" ? "added: " : kind === "del" ? "removed: " : "";
         return (
           <div key={i} className={cls}>
@@ -90,10 +117,22 @@ export function show(value: unknown): string {
 
 export function Stat({ label, value, detail, tone = "muted" }: { label: string; value: ReactNode; detail?: ReactNode; tone?: Tone }) {
   return (
-    <div className={`rounded-lg p-4 ring-1 ring-inset ${tones[tone]}`}>
-      <div className="text-sm font-medium opacity-80">{label}</div>
-      <div className="mt-1 text-2xl font-bold">{value}</div>
-      {detail && <div className="mt-1 text-sm">{detail}</div>}
+    <div className="rounded-lg border border-zinc-200/80 bg-white px-4 py-3">
+      <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+        <Dot tone={tone} />
+        {label}
+      </div>
+      <div className={`mt-1 text-lg font-semibold tracking-tight ${values[tone]}`}>{value}</div>
+      {detail && <div className="mt-0.5 truncate text-xs text-zinc-500" title={typeof detail === "string" ? detail : undefined}>{detail}</div>}
     </div>
   );
 }
+
+// Shared table classes, so every table reads the same.
+export const th = "py-2 pr-4 text-left text-2xs font-semibold uppercase tracking-wider text-zinc-400";
+export const td = "py-3 pr-4 align-top";
+export const link = "font-mono font-semibold text-indigo-600 hover:text-indigo-800 hover:underline underline-offset-2";
+export const buttonPrimary =
+  "inline-flex items-center rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-zinc-700 disabled:opacity-40";
+export const buttonGhost =
+  "inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ring-zinc-200 hover:bg-zinc-50 disabled:opacity-35";
