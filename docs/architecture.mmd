@@ -3,6 +3,7 @@
 %% (Windows PowerShell with scripts disabled: use npx.cmd instead of npx.)
 flowchart LR
     IN["Power App export<br/>(synthetic)<br/>app.pa.yaml · flow.json<br/>dataverse-schema.json"]
+    DV[("Dataverse rows (40)<br/>synthetic export")]
 
     subgraph T["TRANSFORM"]
         EXT["Extractor<br/>code parses rules"]
@@ -16,6 +17,8 @@ flowchart LR
         GEN["Generator<br/>templates · precedence"]
         GENLLM(["LLM: one method<br/>body per rule"])
         APPOUT["Migrated app<br/>.NET 8 API · Rules/R01–R11<br/>Cosmos model · React form"]
+        MIG["Data migration<br/>schema mapping · quarantine<br/>reconcile (7 checks)"]
+        DOCS[("Cosmos DB documents (33)<br/>7 rows quarantined")]
     end
 
     subgraph V["VERIFY"]
@@ -23,6 +26,7 @@ flowchart LR
         JUDGE["Parity Court<br/>run API · compare<br/>field by field"]
         REPAIR["Repair loop<br/>max 3 · Rules/ only"]
         REPLLM(["LLM: patch for<br/>one rule file"])
+        REPLAY["Replay<br/>migrated claims through the API<br/>vs stored status"]
     end
 
     OUT["Evidence + dashboard<br/>parity · repairs · evidence.md<br/>Transform · Rebuild · Verify"]
@@ -40,12 +44,18 @@ flowchart LR
     REPLLM -. patch .-> REPAIR
     REPAIR -- re-judge --> JUDGE
     JUDGE --> OUT
+    DV --> MIG
+    APPOUT -- ClaimDocument shape --> MIG
+    MIG --> DOCS
+    DOCS --> REPLAY
+    APPOUT --> REPLAY
+    REPLAY --> OUT
 
     classDef llm fill:#fff4d6,stroke:#b7791f,color:#5f370e
     classDef nollm fill:#e8f1fb,stroke:#2b6cb0,color:#1a365d
     classDef human fill:#e6f6ec,stroke:#2f855a,color:#1c4532,stroke-width:3px
     classDef data fill:#f4f4f5,stroke:#71717a,color:#27272a
     class EXTLLM,GENLLM,REPLLM llm
-    class EXT,GEN,JUDGE,REPAIR,APPOUT,OUT nollm
+    class EXT,GEN,JUDGE,REPAIR,APPOUT,OUT,MIG,REPLAY nollm
     class GATE human
-    class REG,CASES,IN data
+    class REG,CASES,IN,DV,DOCS data

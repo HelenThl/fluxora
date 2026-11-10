@@ -29,6 +29,9 @@ runs/*
 # The demo run quoted by the submission docs (its generated/ is byte-identical to generated/)
 !runs/20261108-160920/
 runs/20261108-160920/generated/
+# The 8-stage demo run quoted by the submission docs (data migration + replay); median of 5 fresh-clone runs
+!runs/20261110-175816/
+runs/20261110-175816/generated/
 
 # Local, uncommitted LLM cache experiments (keep other models out of orchestrator/cache/)
 .local/
