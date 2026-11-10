@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { ParityCase, RunData } from "../types";
+import type { Migration, ParityCase, RunData } from "../types";
 import { Badge, Diff, OracleBadge, Section, Stat, VerdictBadge, show } from "../ui";
 
 type Stage = "before" | "after";
@@ -232,6 +232,8 @@ export default function Verify({ run, onRule }: { run: RunData; onRule: (id: str
         )}
       </Section>
 
+      {ev.migration && <MigrationSection m={ev.migration} runId={run.runId} />}
+
       <Section title="Evidence summary" subtitle={<>Also written to <span className="font-mono">runs/{run.runId}/evidence.md</span> by <span className="font-mono">fluxora evidence {run.runId}</span>.</>}>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Stat
@@ -260,6 +262,16 @@ export default function Verify({ run, onRule }: { run: RunData; onRule: (id: str
             tone={ev.tamperGuard?.unchanged ? "good" : "bad"}
           />
           <Stat
+            label="Data migration"
+            value={ev.migration ? ev.migration.result : "not run"}
+            detail={
+              ev.migration
+                ? `${ev.migration.counts.migrated} migrated · ${ev.migration.counts.quarantined} quarantined of ${ev.migration.counts.read} rows`
+                : `run: fluxora migrate ${run.runId}`
+            }
+            tone={!ev.migration ? "muted" : ev.migration.result === "PASS" ? "good" : "bad"}
+          />
+          <Stat
             label="Last judge pass (measured)"
             value={ev.timings ? `${ev.timings.totalSeconds}s` : "-"}
             detail={ev.timings ? `build ${ev.timings.buildSeconds}s · start ${ev.timings.startupSeconds}s · cases ${ev.timings.casesSeconds}s` : undefined}
@@ -273,5 +285,69 @@ export default function Verify({ run, onRule }: { run: RunData; onRule: (id: str
         </ul>
       </Section>
     </div>
+  );
+}
+
+function MigrationSection({ m, runId }: { m: Migration; runId: string }) {
+  return (
+    <Section
+      title="Data migration"
+      subtitle={
+        <>
+          Dataverse <span className="font-mono">{m.source.table}</span> rows to Cosmos DB documents (
+          <span className="font-mono">{m.target.document}</span>, id = <span className="font-mono">{m.target.id}</span>, partition key{" "}
+          <span className="font-mono">{m.target.partitionKey}</span>). Written to <span className="font-mono">runs/{runId}/{m.target.file}</span>.
+        </>
+      }
+    >
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Stat label="Rows read" value={m.counts.read} detail={m.source.path} tone="info" />
+        <Stat label="Migrated" value={m.counts.migrated} detail="mapped from dataverse-schema.json" tone="good" />
+        <Stat label="Quarantined" value={m.counts.quarantined} detail="not migrated; a person must decide" tone={m.counts.quarantined ? "warn" : "good"} />
+      </div>
+      <h3 className="mt-5 font-semibold">
+        Reconciliation:{" "}
+        <span className={m.result === "PASS" ? "text-emerald-700" : "text-red-700"}>{m.result}</span>
+      </h3>
+      <ul className="mt-2 space-y-1">
+        {m.checks.map((c) => (
+          <li key={c.check} className="flex gap-3">
+            <span className={`w-12 shrink-0 font-bold ${c.pass ? "text-emerald-700" : "text-red-700"}`}>{c.pass ? "PASS" : "FAIL"}</span>
+            <span>
+              <span className="font-medium">{c.check}</span>: <span className="text-slate-600">{c.detail}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      {m.quarantined.length > 0 && (
+        <>
+          <h3 className="mt-5 font-semibold">Quarantined rows</h3>
+          <div className="mt-2 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="text-slate-500">
+                <tr>
+                  <th className="py-1 pr-4">Claim ID</th>
+                  <th className="py-1">Reasons</th>
+                </tr>
+              </thead>
+              <tbody>
+                {m.quarantined.map((q) => (
+                  <tr key={q.record} className="border-t border-slate-100 align-top">
+                    <td className="whitespace-nowrap py-1 pr-4 font-mono">{q.claimId ?? q.record}</td>
+                    <td className="py-1">{q.reasons.join("; ")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+      {m.defaulted.length > 0 && (
+        <p className="mt-4 text-sm text-slate-600">
+          Defaulted (empty in Dataverse, schema default applied):{" "}
+          {m.defaulted.map((d) => `${d.column} = ${JSON.stringify(d.value)}`).join(" · ")}
+        </p>
+      )}
+    </Section>
   );
 }

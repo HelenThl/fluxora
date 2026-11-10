@@ -1,0 +1,530 @@
+[
+  {
+    "id": "CLM-900001",
+    "policyNumber": "POL-700007",
+    "claimType": "Home",
+    "policyStartDate": "2025-02-01",
+    "incidentDate": "2026-02-04",
+    "reportedDate": "2026-02-16",
+    "claimAmount": 180.0,
+    "hasReceipt": true,
+    "status": "Below excess",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "90f95193-2c91-4a42-a506-930d4c964c45",
+      "modifiedOn": "2026-02-16T09:01:00Z"
+    }
+  },
+  {
+    "id": "CLM-900002",
+    "policyNumber": "POL-700014",
+    "claimType": "Travel",
+    "policyStartDate": "2025-03-01",
+    "incidentDate": "2026-03-07",
+    "reportedDate": "2026-04-06",
+    "claimAmount": 249.99,
+    "hasReceipt": true,
+    "status": "Approved",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "78a2d30d-b964-4965-b7c1-cadcd6c6c5c0",
+      "modifiedOn": "2026-04-06T09:02:00Z"
+    }
+  },
+  {
+    "id": "CLM-900003",
+    "policyNumber": "POL-700021",
+    "claimType": "Motor",
+    "policyStartDate": "2025-04-01",
+    "incidentDate": "2026-04-10",
+    "reportedDate": "2026-05-11",
+    "claimAmount": 250.0,
+    "hasReceipt": true,
+    "status": "Below excess",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "51b3b775-5f85-4016-a946-4de6ba35c042",
+      "modifiedOn": "2026-05-11T09:03:00Z"
+    }
+  },
+  {
+    "id": "CLM-900004",
+    "policyNumber": "POL-700028",
+    "claimType": "Home",
+    "policyStartDate": "2025-05-01",
+    "incidentDate": "2026-05-13",
+    "reportedDate": "2026-06-27",
+    "claimAmount": 312.4,
+    "hasReceipt": true,
+    "status": "Below excess",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "f7b7474c-53c3-4579-8f46-42982e159731",
+      "modifiedOn": "2026-06-27T09:04:00Z"
+    }
+  },
+  {
+    "id": "CLM-900006",
+    "policyNumber": "POL-700042",
+    "claimType": "Motor",
+    "policyStartDate": "2025-07-01",
+    "incidentDate": "2026-07-19",
+    "reportedDate": "2026-07-31",
+    "claimAmount": 720.0,
+    "hasReceipt": true,
+    "status": "Approved",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "23f6fdc4-8882-4b65-a70e-7a1a8b9c9761",
+      "modifiedOn": "2026-07-31T09:06:00Z"
+    }
+  },
+  {
+    "id": "CLM-900007",
+    "policyNumber": "POL-700049",
+    "claimType": "Home",
+    "policyStartDate": "2025-08-01",
+    "incidentDate": "2025-07-22",
+    "reportedDate": "2025-08-21",
+    "claimAmount": 980.25,
+    "hasReceipt": true,
+    "status": "Not covered",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "b3329a4a-5a17-48ea-b369-517ff26bf95a",
+      "modifiedOn": "2025-08-21T09:07:00Z"
+    }
+  },
+  {
+    "id": "CLM-900008",
+    "policyNumber": "POL-700056",
+    "claimType": "Travel",
+    "policyStartDate": "2025-09-01",
+    "incidentDate": "2026-09-25",
+    "reportedDate": "2026-10-26",
+    "claimAmount": 1250.0,
+    "hasReceipt": true,
+    "status": "Manual review",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "66952750-badc-473b-b2a2-721197e96e7d",
+      "modifiedOn": "2026-10-26T09:08:00Z"
+    }
+  },
+  {
+    "id": "CLM-900009",
+    "policyNumber": "POL-700063",
+    "claimType": "Motor",
+    "policyStartDate": "2025-10-01",
+    "incidentDate": "2026-01-01",
+    "reportedDate": "2026-02-15",
+    "claimAmount": 1499.99,
+    "hasReceipt": false,
+    "status": "Manual review",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "2cb36fb5-390b-4163-ba8d-e06fd001b115",
+      "modifiedOn": "2026-02-15T09:09:00Z"
+    }
+  },
+  {
+    "id": "CLM-900010",
+    "policyNumber": "POL-700070",
+    "claimType": "Home",
+    "policyStartDate": "2025-11-01",
+    "incidentDate": "2026-02-04",
+    "reportedDate": "2026-02-07",
+    "claimAmount": 1875.6,
+    "hasReceipt": true,
+    "status": "Approved",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "8aa34c5f-7f33-4fdc-af40-7357909102cb",
+      "modifiedOn": "2026-02-07T09:10:00Z"
+    }
+  },
+  {
+    "id": "CLM-900011",
+    "policyNumber": "POL-700077",
+    "claimType": "Travel",
+    "policyStartDate": "2025-12-01",
+    "incidentDate": "2026-03-07",
+    "reportedDate": "2026-03-19",
+    "claimAmount": 2100.0,
+    "hasReceipt": false,
+    "status": "Approved",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "298ddfb9-f337-4091-a75e-ef7434aa9ce4",
+      "modifiedOn": "2026-03-19T09:11:00Z"
+    }
+  },
+  {
+    "id": "CLM-900013",
+    "policyNumber": "POL-700091",
+    "claimType": "Home",
+    "policyStartDate": "2025-02-01",
+    "incidentDate": "2026-05-13",
+    "reportedDate": "2026-06-13",
+    "claimAmount": 2999.0,
+    "hasReceipt": true,
+    "status": "Manual review",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "4e781bce-ff16-4d25-9280-cf3810f44545",
+      "modifiedOn": "2026-06-13T09:13:00Z"
+    }
+  },
+  {
+    "id": "CLM-900014",
+    "policyNumber": "POL-700098",
+    "claimType": "Travel",
+    "policyStartDate": "2025-03-01",
+    "incidentDate": "2026-06-16",
+    "reportedDate": "2026-07-31",
+    "claimAmount": 3420.1,
+    "hasReceipt": true,
+    "status": "Manual review",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "14efd5b8-0d10-4f30-bb69-2d87ef2e42d9",
+      "modifiedOn": "2026-07-31T09:14:00Z"
+    }
+  },
+  {
+    "id": "CLM-900016",
+    "policyNumber": "POL-700112",
+    "claimType": "Home",
+    "policyStartDate": "2025-05-01",
+    "incidentDate": "2026-08-22",
+    "reportedDate": "2026-09-03",
+    "claimAmount": 4999.99,
+    "hasReceipt": true,
+    "status": "Approved",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "3d835380-a70e-4b4c-a330-9cbbf0fbd66b",
+      "modifiedOn": "2026-09-03T09:16:00Z"
+    }
+  },
+  {
+    "id": "CLM-900017",
+    "policyNumber": "POL-700119",
+    "claimType": "Travel",
+    "policyStartDate": "2025-06-01",
+    "incidentDate": "2026-09-25",
+    "reportedDate": "2026-10-25",
+    "claimAmount": 5000.0,
+    "hasReceipt": false,
+    "status": "Approved",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "2e6293eb-e6a0-4e66-be61-ab8b79f8b380",
+      "modifiedOn": "2026-10-25T09:17:00Z"
+    }
+  },
+  {
+    "id": "CLM-900018",
+    "policyNumber": "POL-700126",
+    "claimType": "Motor",
+    "policyStartDate": "2025-07-01",
+    "incidentDate": "2026-01-01",
+    "reportedDate": "2026-02-01",
+    "claimAmount": 5000.01,
+    "hasReceipt": true,
+    "status": "Manual review",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "e1dbc343-8bcb-41f2-b772-644d16a3f4a1",
+      "modifiedOn": "2026-02-01T09:18:00Z"
+    }
+  },
+  {
+    "id": "CLM-900019",
+    "policyNumber": "POL-700133",
+    "claimType": "Home",
+    "policyStartDate": "2025-08-01",
+    "incidentDate": "2026-02-04",
+    "reportedDate": "2026-03-21",
+    "claimAmount": 5600.0,
+    "hasReceipt": true,
+    "status": "Manual review",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "9e1d72c1-157e-4c5c-af1b-884b77eb0748",
+      "modifiedOn": "2026-03-21T09:19:00Z"
+    }
+  },
+  {
+    "id": "CLM-900020",
+    "policyNumber": "POL-700140",
+    "claimType": "Travel",
+    "policyStartDate": "2025-09-01",
+    "incidentDate": "2026-03-07",
+    "reportedDate": "2026-03-10",
+    "claimAmount": 7250.5,
+    "hasReceipt": true,
+    "status": "Pending approval",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "f95582bd-cd7b-4c4c-a1e4-55ffc6f88051",
+      "modifiedOn": "2026-03-10T09:20:00Z"
+    }
+  },
+  {
+    "id": "CLM-900021",
+    "policyNumber": "POL-700147",
+    "claimType": "Motor",
+    "policyStartDate": "2025-10-01",
+    "incidentDate": "2026-04-10",
+    "reportedDate": "2026-04-22",
+    "claimAmount": 820.0,
+    "hasReceipt": true,
+    "status": "Approved",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "5a9f562b-458b-4b8b-94fe-ee4607bb2fb8",
+      "modifiedOn": "2026-04-22T09:21:00Z"
+    }
+  },
+  {
+    "id": "CLM-900023",
+    "policyNumber": "POL-700161",
+    "claimType": "Travel",
+    "policyStartDate": "2025-12-01",
+    "incidentDate": "2025-11-21",
+    "reportedDate": "2025-12-22",
+    "claimAmount": 1320.0,
+    "hasReceipt": true,
+    "status": "Not covered",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "22f3ef3d-4dc9-4b04-bf09-722ace584524",
+      "modifiedOn": "2025-12-22T09:23:00Z"
+    }
+  },
+  {
+    "id": "CLM-900024",
+    "policyNumber": "POL-700168",
+    "claimType": "Motor",
+    "policyStartDate": "2025-01-01",
+    "incidentDate": "2026-07-19",
+    "reportedDate": "2026-09-02",
+    "claimAmount": 95.0,
+    "hasReceipt": true,
+    "status": "Below excess",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "962b7607-0c88-4320-b722-7b2e1248ee7e",
+      "modifiedOn": "2026-09-02T09:24:00Z"
+    }
+  },
+  {
+    "id": "CLM-900025",
+    "policyNumber": "POL-700175",
+    "claimType": "Home",
+    "policyStartDate": "2025-02-01",
+    "incidentDate": "2026-08-22",
+    "reportedDate": "2026-08-25",
+    "claimAmount": 2780.0,
+    "hasReceipt": true,
+    "status": "Approved",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "053c5c3c-97e1-4280-890b-178fe44af836",
+      "modifiedOn": "2026-08-25T09:25:00Z"
+    }
+  },
+  {
+    "id": "CLM-900027",
+    "policyNumber": "POL-700189",
+    "claimType": "Motor",
+    "policyStartDate": "2025-04-01",
+    "incidentDate": "2026-01-01",
+    "reportedDate": "2026-01-31",
+    "claimAmount": 610.0,
+    "hasReceipt": true,
+    "status": "Approved",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "c073b2f4-3250-4ba4-b33e-6440e0ca36a6",
+      "modifiedOn": "2026-01-31T09:27:00Z"
+    }
+  },
+  {
+    "id": "CLM-900029",
+    "policyNumber": "POL-700203",
+    "claimType": "Travel",
+    "policyStartDate": "2025-06-01",
+    "incidentDate": "2026-03-07",
+    "reportedDate": "2026-04-21",
+    "claimAmount": 1999.0,
+    "hasReceipt": true,
+    "status": "Manual review",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "cae09cb7-2bb3-47f4-9d47-3b2e628a8f6e",
+      "modifiedOn": "2026-04-21T09:29:00Z"
+    }
+  },
+  {
+    "id": "CLM-900030",
+    "policyNumber": "POL-700210",
+    "claimType": "Motor",
+    "policyStartDate": "2025-07-01",
+    "incidentDate": "2026-04-10",
+    "reportedDate": "2026-04-13",
+    "claimAmount": 8900.0,
+    "hasReceipt": true,
+    "status": "Pending approval",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "70cd8e29-312d-437e-b744-bf7db18d62e6",
+      "modifiedOn": "2026-04-13T09:30:00Z"
+    }
+  },
+  {
+    "id": "CLM-900031",
+    "policyNumber": "POL-700217",
+    "claimType": "Home",
+    "policyStartDate": "2025-08-01",
+    "incidentDate": "2026-05-13",
+    "reportedDate": "2026-05-25",
+    "claimAmount": 1105.55,
+    "hasReceipt": true,
+    "status": "Approved",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "00f171e7-46e4-4052-b087-699103f670fa",
+      "modifiedOn": "2026-05-25T09:31:00Z"
+    }
+  },
+  {
+    "id": "CLM-900032",
+    "policyNumber": "POL-700224",
+    "claimType": "Travel",
+    "policyStartDate": "2025-09-01",
+    "incidentDate": "2026-06-16",
+    "reportedDate": "2026-07-16",
+    "claimAmount": 2650.0,
+    "hasReceipt": true,
+    "status": "Approved",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "69a7a771-526c-4724-89c7-1f19cc5cec5d",
+      "modifiedOn": "2026-07-16T09:32:00Z"
+    }
+  },
+  {
+    "id": "CLM-900033",
+    "policyNumber": "POL-700231",
+    "claimType": "Motor",
+    "policyStartDate": "2025-10-01",
+    "incidentDate": "2026-07-19",
+    "reportedDate": "2026-08-19",
+    "claimAmount": 540.0,
+    "hasReceipt": true,
+    "status": "Manual review",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "fdfb9c97-8740-46f9-97f6-04092f7548b1",
+      "modifiedOn": "2026-08-19T09:33:00Z"
+    }
+  },
+  {
+    "id": "CLM-900035",
+    "policyNumber": "POL-700245",
+    "claimType": "Travel",
+    "policyStartDate": "2025-12-01",
+    "incidentDate": "2026-09-25",
+    "reportedDate": "2026-09-28",
+    "claimAmount": 730.8,
+    "hasReceipt": true,
+    "status": "Approved",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "0e2cc9c5-acc4-4c16-b653-b77e02a010c5",
+      "modifiedOn": "2026-09-28T09:35:00Z"
+    }
+  },
+  {
+    "id": "CLM-900036",
+    "policyNumber": "POL-700252",
+    "claimType": "Motor",
+    "policyStartDate": "2025-01-01",
+    "incidentDate": "2026-01-01",
+    "reportedDate": "2026-01-13",
+    "claimAmount": 1580.0,
+    "hasReceipt": true,
+    "status": "Approved",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "69e4b9e3-15e0-4312-a3db-2189f7d4db55",
+      "modifiedOn": "2026-01-13T09:36:00Z"
+    }
+  },
+  {
+    "id": "CLM-900037",
+    "policyNumber": "POL-700259",
+    "claimType": "Home",
+    "policyStartDate": "2025-02-01",
+    "incidentDate": "2026-02-04",
+    "reportedDate": "2026-03-06",
+    "claimAmount": 3000.0,
+    "hasReceipt": true,
+    "status": null,
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "a9a43b40-d2a5-419f-a06b-0b9f102941a3",
+      "modifiedOn": "2026-03-06T09:37:00Z"
+    }
+  },
+  {
+    "id": "CLM-900038",
+    "policyNumber": "POL-700266",
+    "claimType": "Travel",
+    "policyStartDate": "2025-03-01",
+    "incidentDate": "2026-03-07",
+    "reportedDate": "2026-04-07",
+    "claimAmount": 460.0,
+    "hasReceipt": true,
+    "status": "Manual review",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "f7ca718f-f512-4b59-bc56-df6604d9490b",
+      "modifiedOn": "2026-04-07T09:38:00Z"
+    }
+  },
+  {
+    "id": "CLM-900039",
+    "policyNumber": "POL-700273",
+    "claimType": "Motor",
+    "policyStartDate": "2025-04-01",
+    "incidentDate": "2026-04-10",
+    "reportedDate": "2026-05-25",
+    "claimAmount": 2200.0,
+    "hasReceipt": true,
+    "status": "Manual review",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "dc1e573f-27c5-4138-94df-3ffa85e42498",
+      "modifiedOn": "2026-05-25T09:39:00Z"
+    }
+  },
+  {
+    "id": "CLM-900040",
+    "policyNumber": "POL-700280",
+    "claimType": "Home",
+    "policyStartDate": "2025-05-01",
+    "incidentDate": "2026-05-13",
+    "reportedDate": "2026-05-16",
+    "claimAmount": 1010.1,
+    "hasReceipt": true,
+    "status": "Approved",
+    "sourceRecord": {
+      "table": "fx_claim",
+      "id": "b3084aab-67e4-479c-bdbb-f0ee90f21158",
+      "modifiedOn": "2026-05-16T09:40:00Z"
+    }
+  }
+]

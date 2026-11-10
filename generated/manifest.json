@@ -149,6 +149,10 @@
       "rules": []
     },
     {
+      "path": "web/playwright.config.ts",
+      "rules": []
+    },
+    {
       "path": "web/src/App.tsx",
       "rules": []
     },
@@ -162,6 +166,10 @@
     },
     {
       "path": "web/src/styles.css",
+      "rules": []
+    },
+    {
+      "path": "web/tests/claim-form.spec.ts",
       "rules": []
     },
     {

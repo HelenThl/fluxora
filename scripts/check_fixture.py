@@ -16,8 +16,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURE = ROOT / "fixtures" / "claim-triage"
-FIXTURE_FILES = ["app.pa.yaml", "flow.json", "dataverse-schema.json", "reference-cases.json"]
-JSON_FILES = ["flow.json", "dataverse-schema.json", "reference-cases.json"]
+FIXTURE_FILES = ["app.pa.yaml", "flow.json", "dataverse-schema.json", "reference-cases.json", "dataverse-records.json"]
+JSON_FILES = ["flow.json", "dataverse-schema.json", "reference-cases.json", "dataverse-records.json"]
 
 RULE_IDS = [f"R{n:02d}" for n in range(1, 12)]
 VALIDATION_RULES = {"R01", "R02", "R03", "R08"}

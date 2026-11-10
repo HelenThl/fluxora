@@ -32,3 +32,7 @@ runs/20261108-160920/generated/
 
 # Local, uncommitted LLM cache experiments (keep other models out of orchestrator/cache/)
 .local/
+
+# Playwright output
+test-results/
+playwright-report/

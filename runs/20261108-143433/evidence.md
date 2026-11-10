@@ -2,14 +2,15 @@
 
 **Transform. Rebuild. Verify.**
 
-Written 2026-11-08T15:13:02Z by `fluxora evidence 20261108-143433`, from `runs/20261108-143433/`.
+Written 2026-11-10T15:40:44Z by `fluxora evidence 20261108-143433`, from `runs/20261108-143433/`.
 
 ## Summary
 
 - **Transform:** 11 rules extracted from `fixtures/claim-triage`. 11 approved, 0 rejected, 0 pending (11 timestamped decisions). 2 unsupported constructs are listed below.
-- **Rebuild:** 30 files generated under `generated/`, including 11 rule files, each traceable to one rule ID.
+- **Rebuild:** 32 files generated under `generated/`, including 11 rule files, each traceable to one rule ID.
 - **Verify:** Parity Court **PASS**: 32/32 cases and 11/11 rules. Seeded defect `threshold` in R09 made the first verdict FAIL (31/32 cases; red: R09).
 - **Repair:** 1 attempt(s); fixed R09; unresolved -.
+- **Data migration:** **PASS**: 40 Dataverse rows read, 33 migrated to Cosmos DB documents, 7 quarantined with a reason; 7/7 reconciliation checks pass.
 - **Tamper guard:** reference cases unchanged (sha256 `b275b239cd3e316d`).
 
 ## Rule register
@@ -67,6 +68,36 @@ Build ok; judge PASS (32/32 cases).
 ```
 
 
+## Data migration
+
+`fixtures/claim-triage/dataverse-records.json` (Dataverse table `fx_claim`) to Cosmos DB documents shaped by `api/Data/ClaimDocument.cs` (id = `id`, partition key `/policyNumber`), written to `runs/20261108-143433/migrated-claims.json`.
+
+| Reconciliation check | Result | Detail |
+|---|---|---|
+| Every row accounted for | PASS | 40 read = 33 migrated + 7 quarantined |
+| Document ids unique | PASS | 33 distinct ids for 33 documents |
+| Round trip: each document maps back to its row | PASS | 297 values compared, 0 differ |
+| Control total: claimAmount | PASS | source £73,488.28, documents £73,488.28 |
+| Counts by claimType | PASS | Home 11, Motor 11, Travel 11 |
+| Counts by status | PASS | (blank) 1, Approved 14, Below excess 4, Manual review 10, Not covered 2, Pending approval 2 |
+| Source unchanged | PASS | sha256 95990701845c |
+
+**Quarantined rows** (not migrated; a person must fix or decide):
+
+| Claim ID | Dataverse row | Reasons |
+|---|---|---|
+| CLM-900005 | `881729de-53f0-47bd-8e46-d2c93a8a751f` | fx_claimid: CLM-900005 is on 2 rows; it becomes the Cosmos document id, so one row would overwrite the other. A person must decide which is correct |
+| CLM-900005 | `ff4265e2-bdd5-490a-83bb-f77a34d2761b` | fx_claimid: CLM-900005 is on 2 rows; it becomes the Cosmos document id, so one row would overwrite the other. A person must decide which is correct |
+| CLM-900015 | `f166cf91-c0ac-4264-b724-84fb2f632ebc` | fx_claimtype: option value 100000007 is not in the schema's option set |
+| CLM-900022 | `bd5b8140-37f0-47e4-a1bc-3778253f207a` | fx_claimamount: required value is missing |
+| CLM-900026 | `07135840-5075-414a-9f2c-8fcfd489a6d5` | fx_claimamount: 1234.567 has more than 2 decimal places |
+| CLM-900028 | `760b27b7-a25f-4ecb-8287-28063fbcadb2` | fx_policynumber: 24 characters, longer than the column's maxLength 20 |
+| CLM-900034 | `0ac885d2-0eeb-440c-99d9-203da40590f7` | fx_incidentdate: "2026-02-30" is not a valid date (YYYY-MM-DD) |
+
+**Defaulted values** (empty in Dataverse, schema default applied):
+
+- `fx_hasreceipt` = `false` on row `2cb36fb5-390b-4163-ba8d-e06fd001b115`
+
 ## Unsupported items
 
 | File | Ref | Construct | Reason |
@@ -91,3 +122,4 @@ Last judge pass: build 4.2s, API start 1.2s, cases 0.62s.
 - Rule sentences were written in a Claude Code session from the extractor's prompts, not by a live API call.
 - C# rule bodies were written in a Claude Code session from the generator's prompts, not by a live API call.
 - Repair attempt 1 for R09 was a replay (llm-cache), not a live LLM call.
+- The 40 Dataverse rows migrated to Cosmos DB documents are synthetic; 7 carry planted data-quality problems and were quarantined, not dropped.
