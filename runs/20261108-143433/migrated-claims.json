@@ -7,7 +7,7 @@
     "incidentDate": "2026-02-04",
     "reportedDate": "2026-02-16",
     "claimAmount": 180.0,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": "Below excess",
     "sourceRecord": {
       "table": "fx_claim",
@@ -39,7 +39,7 @@
     "incidentDate": "2026-04-10",
     "reportedDate": "2026-05-11",
     "claimAmount": 250.0,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": "Below excess",
     "sourceRecord": {
       "table": "fx_claim",
@@ -87,7 +87,7 @@
     "incidentDate": "2025-07-22",
     "reportedDate": "2025-08-21",
     "claimAmount": 980.25,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": "Not covered",
     "sourceRecord": {
       "table": "fx_claim",
@@ -151,7 +151,7 @@
     "incidentDate": "2026-03-07",
     "reportedDate": "2026-03-19",
     "claimAmount": 2100.0,
-    "hasReceipt": false,
+    "hasReceipt": true,
     "status": "Approved",
     "sourceRecord": {
       "table": "fx_claim",
@@ -167,7 +167,7 @@
     "incidentDate": "2026-05-13",
     "reportedDate": "2026-06-13",
     "claimAmount": 2999.0,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": "Manual review",
     "sourceRecord": {
       "table": "fx_claim",
@@ -215,7 +215,7 @@
     "incidentDate": "2026-09-25",
     "reportedDate": "2026-10-25",
     "claimAmount": 5000.0,
-    "hasReceipt": false,
+    "hasReceipt": true,
     "status": "Approved",
     "sourceRecord": {
       "table": "fx_claim",
@@ -247,7 +247,7 @@
     "incidentDate": "2026-02-04",
     "reportedDate": "2026-03-21",
     "claimAmount": 5600.0,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": "Manual review",
     "sourceRecord": {
       "table": "fx_claim",
@@ -279,7 +279,7 @@
     "incidentDate": "2026-04-10",
     "reportedDate": "2026-04-22",
     "claimAmount": 820.0,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": "Approved",
     "sourceRecord": {
       "table": "fx_claim",
@@ -295,7 +295,7 @@
     "incidentDate": "2025-11-21",
     "reportedDate": "2025-12-22",
     "claimAmount": 1320.0,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": "Not covered",
     "sourceRecord": {
       "table": "fx_claim",
@@ -327,7 +327,7 @@
     "incidentDate": "2026-08-22",
     "reportedDate": "2026-08-25",
     "claimAmount": 2780.0,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": "Approved",
     "sourceRecord": {
       "table": "fx_claim",
@@ -343,7 +343,7 @@
     "incidentDate": "2026-01-01",
     "reportedDate": "2026-01-31",
     "claimAmount": 610.0,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": "Approved",
     "sourceRecord": {
       "table": "fx_claim",
@@ -359,7 +359,7 @@
     "incidentDate": "2026-03-07",
     "reportedDate": "2026-04-21",
     "claimAmount": 1999.0,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": "Manual review",
     "sourceRecord": {
       "table": "fx_claim",
@@ -391,7 +391,7 @@
     "incidentDate": "2026-05-13",
     "reportedDate": "2026-05-25",
     "claimAmount": 1105.55,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": "Approved",
     "sourceRecord": {
       "table": "fx_claim",
@@ -423,7 +423,7 @@
     "incidentDate": "2026-07-19",
     "reportedDate": "2026-08-19",
     "claimAmount": 540.0,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": "Manual review",
     "sourceRecord": {
       "table": "fx_claim",
@@ -439,7 +439,7 @@
     "incidentDate": "2026-09-25",
     "reportedDate": "2026-09-28",
     "claimAmount": 730.8,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": "Approved",
     "sourceRecord": {
       "table": "fx_claim",
@@ -471,7 +471,7 @@
     "incidentDate": "2026-02-04",
     "reportedDate": "2026-03-06",
     "claimAmount": 3000.0,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": null,
     "sourceRecord": {
       "table": "fx_claim",
@@ -503,7 +503,7 @@
     "incidentDate": "2026-04-10",
     "reportedDate": "2026-05-25",
     "claimAmount": 2200.0,
-    "hasReceipt": true,
+    "hasReceipt": false,
     "status": "Manual review",
     "sourceRecord": {
       "table": "fx_claim",

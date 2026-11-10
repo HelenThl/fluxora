@@ -32,6 +32,7 @@ def test_demo_goes_green_then_red_then_green(demo):
     assert "INITIAL VERDICT: FAIL" in out and "R09-02  status: expected \"Approved\", got \"Pending approval\"" in out
     assert "FINAL VERDICT: PASS" in out
     assert "Read 40 rows from fx_claim: 33 migrated, 7 quarantined." in out and "MIGRATION: PASS" in out
+    assert "32/32 statuses match what Dataverse stored." in out and "REPLAY: PASS" in out
     assert "32/32 are byte-identical to the committed generated/ code" in out
 
 
@@ -45,6 +46,7 @@ def test_demo_labels_every_stage_honestly(demo):
         ("Transform: approval gate", "auto-approved, no human"),
         ("Rebuild: generate", "cached LLM"),
         ("Rebuild: migrate data", "no LLM"),
+        ("Verify: replay migrated data", "no LLM"),
         ("Verify: judge clean code", "no LLM"),
         ("Verify: seeded defect + repair", "repair: cached LLM"),
         ("Total", ""),
