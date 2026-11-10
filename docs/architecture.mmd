@@ -7,7 +7,7 @@ flowchart LR
 
     subgraph T["TRANSFORM"]
         EXT["Extractor<br/>code parses rules"]
-        EXTLLM(["LLM: rule sentence<br/>+ confidence"])
+        EXTLLM(["LLM call 1: rule sentence<br/>+ confidence"])
         REG[("Rule register<br/>11 rules · 2 unsupported")]
     end
 
@@ -15,7 +15,7 @@ flowchart LR
 
     subgraph R["REBUILD"]
         GEN["Generator<br/>templates · precedence"]
-        GENLLM(["LLM: one method<br/>body per rule"])
+        GENLLM(["LLM call 2: one method<br/>body per rule"])
         APPOUT["Migrated app<br/>.NET 8 API · Rules/R01–R11<br/>Cosmos model · React form"]
         MIG["Data migration<br/>schema mapping · quarantine<br/>reconcile (7 checks)"]
         DOCS[("Cosmos DB documents (33)<br/>7 rows quarantined")]
@@ -25,9 +25,16 @@ flowchart LR
         CASES[("Reference cases (32)<br/>confirmed by Power Fx engine<br/>hash-guarded")]
         JUDGE["Parity Court<br/>run API · compare<br/>field by field"]
         REPAIR["Repair loop<br/>max 3 · Rules/ only"]
-        REPLLM(["LLM: patch for<br/>one rule file"])
+        REPLLM(["LLM call 3: patch for<br/>one rule file"])
         REPLAY["Replay<br/>migrated claims through the API<br/>vs stored status"]
     end
+
+    subgraph M["AI MODELS"]
+        MODEL(["LLM via one thin client (orchestrator/llm.py)<br/>Committed answers: Claude Opus 5.5 (claude-opus-5-5),<br/>written in Claude Code, cached in the repo, replayed offline<br/>Live option: LLM_PROVIDER anthropic or OpenAI-compatible + LLM_MODEL"])
+        PFX["Microsoft Power Fx engine<br/>Microsoft.PowerFx.Interpreter 1.8.1<br/>deterministic oracle, NOT an AI model"]
+    end
+
+    LEG["Legend: yellow = LLM call · blue = deterministic code<br/>green = human decision · grey = data · dotted = LLM output"]
 
     OUT["Evidence + dashboard<br/>parity · repairs · evidence.md<br/>Transform · Rebuild · Verify"]
 
@@ -50,12 +57,18 @@ flowchart LR
     DOCS --> REPLAY
     APPOUT --> REPLAY
     REPLAY --> OUT
+    MODEL -.-> EXTLLM
+    MODEL -.-> GENLLM
+    MODEL -.-> REPLLM
+    PFX -- confirms expected values --> CASES
 
     classDef llm fill:#fff4d6,stroke:#b7791f,color:#5f370e
     classDef nollm fill:#e8f1fb,stroke:#2b6cb0,color:#1a365d
     classDef human fill:#e6f6ec,stroke:#2f855a,color:#1c4532,stroke-width:3px
     classDef data fill:#f4f4f5,stroke:#71717a,color:#27272a
-    class EXTLLM,GENLLM,REPLLM llm
-    class EXT,GEN,JUDGE,REPAIR,APPOUT,OUT,MIG,REPLAY nollm
+    classDef legend fill:#ffffff,stroke:#a1a1aa,color:#3f3f46,stroke-dasharray:4 3
+    class EXTLLM,GENLLM,REPLLM,MODEL llm
+    class EXT,GEN,JUDGE,REPAIR,APPOUT,OUT,MIG,REPLAY,PFX nollm
+    class LEG legend
     class GATE human
     class REG,CASES,IN,DV,DOCS data
