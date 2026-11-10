@@ -1,6 +1,6 @@
 # Responsible AI note
 
-**Data used.** The sample app is synthetic, with no names or personal data. An LLM only ever sees fixture-derived text:
+**Data used.** The sample app and its 40 Dataverse rows are synthetic, with no names or personal data. Data migration and replay make no LLM calls. An LLM only ever sees fixture-derived text:
 - formulas, source refs and screen messages
 - the rule's sentence and its C# file
 - for a repair, the failing cases' rule inputs and the expected-versus-actual values
@@ -16,6 +16,7 @@ No claim or policy IDs are sent.
 - **Bounded repair:** at most 3 attempts per rule. A patch may replace only `Rules/<rule>.cs`, must keep its signature and may not mention claim or policy IDs.
 - **No false passes:** a rule that cannot be fixed is `UNRESOLVED`, never PASS.
 - **Tamper guard:** `reference-cases.json` is hashed before and after every run, and any change fails the run.
+- **Quarantine, not guess:** a Dataverse row that cannot be migrated safely (duplicate id, unknown option, missing or over-precise money, bad date, over-long text) is quarantined with its reason for a person to decide. Reconciliation then proves every row is accounted for.
 - **Honest labels:** every LLM answer is labelled live, cached or replay; replays are never shown as live.
 
 **Bias and fairness.** The rules apply the same thresholds to every claim of a given type. Fluxora preserves existing behaviour, including any unfairness already in the original rules. It proves parity, not fairness: a biased rule migrated faithfully still passes.
@@ -24,7 +25,7 @@ No claim or policy IDs are sent.
 - One synthetic app with 11 rules.
 - The parser covers named formulas, `If`/`Switch` status chains and simple flow comparisons, not all of Power Fx. `Notify` and connectors such as e-mail are listed as unsupported.
 - All 32 expected results are confirmed by Microsoft's Power Fx engine, but the R09/R10 Power Fx versions and the precedence chain are our own encoding.
-- No UI fidelity check and no production data migration.
+- No UI fidelity check. Data migration is shown on 40 synthetic rows only, written in Cosmos document shape to a file; no real Dataverse environment or Cosmos account was used, and the stored statuses the replay checks come from the fixture script, not from the original app.
 - The committed LLM answers were written in a Claude Code session; no live API run has been measured.
 
 **FCA and GDPR.** We claim no compliance. A real deployment would still need:

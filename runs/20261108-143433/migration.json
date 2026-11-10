@@ -1,11 +1,11 @@
 {
-  "migratedAt": "2026-11-10T15:40:44Z",
+  "migratedAt": "2026-11-10T17:56:57Z",
   "source": {
     "path": "fixtures/claim-triage/dataverse-records.json",
     "table": "fx_claim",
     "entitySet": "fx_claims",
-    "sha256Before": "95990701845cfc6f42bd3c5f0f6e67211a4cd1bcc5ea92eac37e3399a7ed63dd",
-    "sha256After": "95990701845cfc6f42bd3c5f0f6e67211a4cd1bcc5ea92eac37e3399a7ed63dd"
+    "sha256Before": "d582deb22bdfd5eaca656ea29a8136d8552f66784c1d317c1153add0c3db1b94",
+    "sha256After": "d582deb22bdfd5eaca656ea29a8136d8552f66784c1d317c1153add0c3db1b94"
   },
   "target": {
     "store": "Cosmos DB",
@@ -13,7 +13,7 @@
     "id": "id",
     "partitionKey": "/policyNumber",
     "file": "migrated-claims.json",
-    "sha256": "df233231a44a437a97506911345bc0d97d188c5006d1d45f5575150c58f9a40b"
+    "sha256": "75004ddb3cc52739006a209b04c1bdc2c601b96b6090b7d5181ddaf3b362859e"
   },
   "mapping": [
     {
@@ -180,9 +180,31 @@
       {
         "check": "Source unchanged",
         "pass": true,
-        "detail": "sha256 95990701845c"
+        "detail": "sha256 d582deb22bdf"
       }
     ]
   },
-  "result": "PASS"
+  "result": "PASS",
+  "replay": {
+    "replayedAt": "2026-11-10T17:56:59Z",
+    "asOf": "reportedDate",
+    "api": "/home/user/fluxora/generated/api",
+    "compared": 32,
+    "matched": 32,
+    "mismatched": [],
+    "noStoredStatus": [
+      {
+        "id": "CLM-900037",
+        "stored": null,
+        "migratedApp": "Approved",
+        "errors": [],
+        "firedRules": [
+          "R05",
+          "R06",
+          "R11"
+        ]
+      }
+    ],
+    "result": "PASS"
+  }
 }

@@ -113,3 +113,27 @@ def test_cli_migrate_writes_the_report_and_evidence_shows_it(tmp_path):
     evidence = (run / "evidence.md").read_text(encoding="utf-8")
     assert "## Data migration" in evidence and "**Data migration:** **PASS**" in evidence
     assert "| Every row accounted for | PASS | 40 read = 33 migrated + 7 quarantined |" in evidence
+
+
+needs_dotnet = pytest.mark.skipif(shutil.which("dotnet") is None, reason="needs the .NET 8 SDK")
+REPLAY_PORT = 5096
+
+
+@needs_dotnet
+def test_replay_matches_every_stored_status_and_catches_a_changed_one(tmp_path):
+    m.run_migration(FIXTURE, GENERATED, tmp_path)
+    replayed = m.replay(tmp_path, GENERATED / "api", port=REPLAY_PORT)
+    assert replayed["result"] == "PASS"
+    assert (replayed["compared"], replayed["matched"]) == (32, 32)
+    assert [x["id"] for x in replayed["noStoredStatus"]] == ["CLM-900037"]  # blank status: listed, not counted as a match
+    assert json.loads((tmp_path / m.REPORT_FILE).read_text(encoding="utf-8"))["replay"]["result"] == "PASS"
+
+    # A stored status the migrated app would not produce must show up as a named mismatch.
+    path = tmp_path / m.DOCUMENTS_FILE
+    docs = json.loads(path.read_text(encoding="utf-8"))
+    target = next(d for d in docs if d["status"] == "Pending approval")
+    target["status"] = "Approved"
+    path.write_text(json.dumps(docs), encoding="utf-8")
+    replayed = m.replay(tmp_path, GENERATED / "api", port=REPLAY_PORT)
+    assert replayed["result"] == "FAIL"
+    assert [(x["id"], x["stored"], x["migratedApp"]) for x in replayed["mismatched"]] == [(target["id"], "Approved", "Pending approval")]

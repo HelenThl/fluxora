@@ -307,3 +307,53 @@ def run_migration(fixture_dir: Path, generated_dir: Path, run_dir: Path) -> dict
     report["result"] = report["reconciliation"]["result"]
     (run_dir / REPORT_FILE).write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
     return report
+
+
+# --- replay: migrated claims through the migrated app ----------------------------------------------
+
+REPLAY_AS_OF = "reportedDate"
+
+
+def replay(run_dir: Path, api_dir: Path, *, port: int, log=lambda _: None) -> dict:
+    """Send every migrated claim to the migrated API and compare its status with the one Dataverse
+    stored. Each claim is evaluated as of its reported date: the day the original app decided it.
+    Adds report["replay"] to migration.json and returns it."""
+    from . import judge
+
+    report_path = run_dir / REPORT_FILE
+    if not report_path.is_file():
+        raise MigrationError(f"No {REPORT_FILE} in {run_dir}. Run `fluxora migrate` first.")
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    docs = json.loads((run_dir / DOCUMENTS_FILE).read_text(encoding="utf-8"), parse_float=Decimal)
+    fields = ("id", "policyNumber", "claimType", "policyStartDate", "incidentDate", "reportedDate", "claimAmount", "hasReceipt")
+
+    matched, mismatched, no_status = [], [], []
+    with judge.running_api(api_dir, port=port, work_dir=run_dir / "work" / "replay", log=log) as url:
+        for doc in docs:
+            body = {("claimId" if f == "id" else f): doc[f] for f in fields} | {"status": None, "asOf": doc[REPLAY_AS_OF]}
+            result = judge.post_claim(url, body)
+            got, errors = result.get("status"), result.get("errors") or []
+            entry = {"id": doc["id"], "stored": doc["status"], "migratedApp": got, "errors": errors, "firedRules": result.get("firedRules", [])}
+            if "httpStatus" in result:
+                entry["detail"] = f"HTTP {result['httpStatus']}: {result['body']}"
+            if doc["status"] is None:
+                no_status.append(entry)
+            elif got == doc["status"] and not errors and "httpStatus" not in result:
+                matched.append(doc["id"])
+            else:
+                mismatched.append(entry)
+
+    compared = len(matched) + len(mismatched)
+    replayed = {
+        "replayedAt": now_iso(),
+        "asOf": REPLAY_AS_OF,
+        "api": api_dir.as_posix(),
+        "compared": compared,
+        "matched": len(matched),
+        "mismatched": mismatched,
+        "noStoredStatus": no_status,
+        "result": "PASS" if compared and not mismatched else "FAIL",
+    }
+    report["replay"] = replayed
+    report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+    return replayed

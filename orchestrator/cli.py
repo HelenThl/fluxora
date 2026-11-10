@@ -23,7 +23,7 @@ from .llm import LLMClient, LLMError, get_settings
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_RUNS = ROOT / "runs"
 DEFAULT_GENERATED = ROOT / "generated"
-DEMO_STAGES = 7
+DEMO_STAGES = 8
 
 app = typer.Typer(
     help="Fluxora: Transform. Rebuild. Verify. Migrate a Power App and prove it behaves the same, rule by rule.",
@@ -128,6 +128,8 @@ def generate(
 @app.command(help="Rebuild: migrate the Dataverse rows to Cosmos DB Claim documents, quarantine bad rows, reconcile. Writes migration.json.")
 def migrate(
     run_id: str = typer.Argument(..., help="Run ID to migrate data for (uses its fixture and generated API)."),
+    replay: bool = typer.Option(False, "--replay", help="Also send every migrated claim to the migrated API and compare its status with Dataverse (needs .NET)."),
+    port: int = typer.Option(verify.DEFAULT_PORT, "--port", help="Local port for the API during --replay."),
     runs_dir: Path = typer.Option(DEFAULT_RUNS, "--runs-dir", hidden=True),
 ) -> None:
     path = register.rules_path(runs_dir, run_id)
@@ -141,8 +143,29 @@ def migrate(
     except data_migration.MigrationError as e:
         _fail(str(e))
     _print_migration(report)
+    passed = report["result"] == "PASS"
+    if replay:
+        if verify.port_in_use(port):
+            _fail(verify.port_in_use_message(port))
+        try:
+            replayed = data_migration.replay(path.parent, generated_dir_for(path.parent, ROOT) / "api", port=port)
+        except (data_migration.MigrationError, verify.JudgeError) as e:
+            _fail(str(e))
+        _print_replay(replayed)
+        passed = passed and replayed["result"] == "PASS"
     typer.echo(f"\nWrote {_display(path.parent / data_migration.DOCUMENTS_FILE)} and {_display(path.parent / data_migration.REPORT_FILE)}")
-    raise typer.Exit(0 if report["result"] == "PASS" else 1)
+    raise typer.Exit(0 if passed else 1)
+
+
+def _print_replay(r: dict) -> None:
+    typer.echo(f"Replayed {r['compared']} migrated claims through the migrated API (each as of its {r['asOf']}):")
+    typer.echo(f"  {r['matched']}/{r['compared']} statuses match what Dataverse stored.")
+    for m in r["mismatched"]:
+        why = f"errors {', '.join(m['errors'])}" if m["errors"] else f"status {json.dumps(m['migratedApp'])}"
+        typer.secho(f"  MISMATCH  {m['id']}  Dataverse {json.dumps(m['stored'])}, migrated app {why}  {m.get('detail', '')}".rstrip(), fg=typer.colors.RED)
+    for m in r["noStoredStatus"]:
+        typer.echo(f"  not compared  {m['id']}: no status stored in Dataverse (migrated app says {json.dumps(m['migratedApp'])})")
+    typer.secho(f"REPLAY: {r['result']}", fg=typer.colors.GREEN if r["result"] == "PASS" else typer.colors.RED, bold=True)
 
 
 def _print_migration(report: dict) -> None:
@@ -364,8 +387,17 @@ def demo(
         except (verify.JudgeError, repair.RepairError) as e:
             _fail(str(e))
 
-    # 5. Verify: clean
-    s = begin(5, "Verify: Parity Court on the generated code")
+    # 5. Verify: replay the migrated claims through the migrated API
+    s = begin(5, "Verify: replay the migrated claims through the migrated API")
+    try:
+        replayed = data_migration.replay(rules_path.parent, out / "api", port=port)
+    except (data_migration.MigrationError, verify.JudgeError) as e:
+        _fail(str(e))
+    _print_replay(replayed)
+    finish("Verify: replay migrated data", s, "no LLM")
+
+    # 6. Verify: clean
+    s = begin(6, "Verify: Parity Court on the generated code")
     clean = court(None, printing=False)
     summary = clean.parity["summary"]
     typer.secho(
@@ -377,8 +409,8 @@ def demo(
     shutil.copyfile(rules_path.parent / "parity.json", rules_path.parent / "parity-clean.json")
     finish("Verify: judge clean code", s, _repair_mode(clean.attempts))
 
-    # 6. Verify: seeded defect, repair
-    s = begin(6, "Verify: seed a defect, watch Parity Court go red, repair, go green")
+    # 7. Verify: seeded defect, repair
+    s = begin(7, "Verify: seed a defect, watch Parity Court go red, repair, go green")
     seeded = court("threshold", printing=True)
     if seeded.attempts:
         _print_court(seeded.parity, "PARITY COURT  (after repair)", "Final verdict")
@@ -390,8 +422,8 @@ def demo(
         typer.secho(f"UNRESOLVED: {', '.join(fix['unresolved'])}", fg=typer.colors.RED, bold=True)
     finish("Verify: seeded defect + repair", s, _repair_mode(seeded.attempts))
 
-    # 7. Evidence
-    s = begin(7, "Evidence page")
+    # 8. Evidence
+    s = begin(8, "Evidence page")
     write_evidence(rules_path.parent, ROOT, demo_timings=stages)
     finish("Evidence: write evidence.md", s, "no LLM")
     total = time.perf_counter() - demo_start
@@ -405,7 +437,7 @@ def demo(
     typer.echo(f"{'Stage':<{width}}  {'Seconds':>8}  Mode")
     for row in rows:
         typer.echo(f"{row['stage']:<{width}}  {row['seconds']:>8.2f}  {row['mode']}")
-    passed = clean.passed and seeded.passed and migration["result"] == "PASS"
+    passed = clean.passed and seeded.passed and migration["result"] == "PASS" and replayed["result"] == "PASS"
     typer.echo("")
     typer.secho(f"DEMO {'PASSED' if passed else 'FAILED'}: run {run_id}.  See it: fluxora serve {run_id}",
                 fg=typer.colors.GREEN if passed else typer.colors.RED, bold=True)

@@ -1,7 +1,7 @@
 # Deck outline (10 slides)
 
 Every figure below is a measured value from a file in this repo. Nothing is estimated. "Evidence run"
-means `runs/20261108-160920/evidence.md`; "measurements" means `docs/measurements.md`.
+means `runs/20261110-175816/evidence.md` (the 8-stage demo); "measurements" means `docs/measurements.md`.
 
 ## 1. Fluxora: Transform. Rebuild. Verify.
 - Migrates a Power App (Power Fx, a Power Automate flow, Dataverse) to React + .NET 8 + Cosmos DB.
@@ -20,12 +20,13 @@ Evidence: challenge brief.
 ## 3. Approach: three agents, one proof
 - **Transform:** code parses every rule; an LLM only writes the plain-English sentence; a human approves each rule.
 - **Rebuild:** templates plus one LLM-written method body per approved rule, each file tagged with its rule ID.
-- **Verify:** Parity Court runs the migrated API against reference cases confirmed by Microsoft's Power Fx engine, with a bounded repair loop.
+- **Rebuild (data):** the Dataverse rows are migrated to Cosmos DB documents; bad rows are quarantined with a reason, and the result is reconciled.
+- **Verify:** Parity Court runs the migrated API against reference cases confirmed by Microsoft's Power Fx engine, with a bounded repair loop. The migrated claims are also replayed through the new app.
 
 Evidence: `docs/architecture.mmd`, `orchestrator/`.
 
 ## 4. Architecture
-- Pipeline diagram, marking where an LLM is called (3 points) and the human gate.
+- Pipeline diagram, marking where an LLM is called (3 points), the human gate, and the data path (migrate, reconcile, replay).
 - Everything else is deterministic code.
 
 Evidence: `docs/architecture.mmd`.
@@ -44,10 +45,18 @@ Evidence: evidence run, `README.md` Oracle section.
 
 Evidence: evidence run, `parity.json`, `repairs.json`.
 
+## 6b. Results: data migration
+- 40 synthetic Dataverse rows: 33 migrated to Cosmos DB documents, 7 quarantined with a reason (duplicate claim ID on 2 rows, unknown option value, missing amount, 3 decimal places, over-long policy number, impossible date). None dropped, none guessed.
+- Reconciliation, 7/7 checks: every row accounted for, unique ids, a field-by-field round trip (297 values, 0 differ), money control total £73,488.28 on both sides, counts by type and status, source unchanged.
+- Replay: 32/32 migrated claims get the same status from the migrated app as Dataverse stored (1 had no stored status and is listed, not counted).
+- The first replay caught a bug in our own synthetic data (two Travel claims over £2,000 stored as Approved without a receipt, which R08 forbids). We fixed the fixture, not the check.
+
+Evidence: evidence run `migration.json`, `migrated-claims.json`.
+
 ## 7. Business impact: what we measured
-- **Measured:** the full pipeline for the sample app took **12.11s** in the evidence run, and **10.78–15.53s** (median 11.10s) across 6 runs.
-  - That is 11 rules, 32 cases, a seeded defect and its repair.
-  - Machine: one Windows 11 machine, offline.
+- **Measured:** the full 8-stage pipeline for the sample app took **8.01s** in the evidence run, and **7.86–10.60s** (median 8.01s) across 5 fresh-clone runs.
+  - That is 11 rules, 40 Dataverse rows migrated and replayed, 32 cases, a seeded defect and its repair.
+  - Machine: one Linux cloud container, offline. An earlier 6-stage set on a Windows 11 machine measured 10.78–15.53s; the two machines differ, so we don't compare them.
 - **Not measured:**
   - human review time (the approval gate was auto-approved)
   - live LLM latency (every LLM answer came from the cache)
@@ -65,6 +74,7 @@ Evidence: `docs/responsible-ai.md`.
 
 ## 9. Honest limits
 - One synthetic app; a Power Fx subset (named formulas, If/Switch chains, simple flow conditions).
+- Data migration is shown on 40 synthetic rows, written to a file in Cosmos document shape; no real Dataverse environment or Cosmos account was used. The stored statuses the replay compares against come from our fixture script, not from a run of the original Power App.
 - The committed LLM answers were written in a Claude Code session; no live API run has been measured yet.
 - Out of scope: UI fidelity, PDF reports, auth, Azure deployment, multi-tenant.
 

@@ -89,6 +89,11 @@ def summarize(
             f"The {migration['counts']['read']} Dataverse rows migrated to Cosmos DB documents are synthetic; "
             f"{migration['counts']['quarantined']} carry planted data-quality problems and were quarantined, not dropped."
         )
+        if migration.get("replay"):
+            notes.append(
+                "Replay statuses are compared with what the synthetic Dataverse rows store. Those stored statuses were produced "
+                "by the fixture's own script, not by a run of the original Power App."
+            )
 
     summary = {
         "runId": rules.get("runId"),
@@ -119,6 +124,7 @@ def summarize(
             "defaulted": migration["defaulted"],
             "source": migration["source"],
             "target": migration["target"],
+            "replay": migration.get("replay"),
         }
     if parity:
         summary["parity"] = {
@@ -200,6 +206,13 @@ def render_markdown(run: dict, demo_timings: list[dict] | None = None) -> str:
             f"Cosmos DB documents, {m['counts']['quarantined']} quarantined with a reason; "
             f"{sum(c['pass'] for c in m['checks'])}/{len(m['checks'])} reconciliation checks pass."
         )
+        rp = m.get("replay")
+        if rp:
+            out.append(
+                f"- **Replay:** **{rp['result']}**: {rp['matched']}/{rp['compared']} migrated claims get the same status from the "
+                f"migrated app as Dataverse stored (each evaluated as of its {rp['asOf']}); "
+                f"{len(rp['noStoredStatus'])} had no stored status to compare."
+            )
     guard = ev.get("tamperGuard")
     if guard:
         out.append(f"- **Tamper guard:** reference cases {'unchanged' if guard['unchanged'] else 'CHANGED'} (sha256 `{guard['sha256Before'][:16]}`).")
@@ -267,6 +280,21 @@ def render_markdown(run: dict, demo_timings: list[dict] | None = None) -> str:
         if m["defaulted"]:
             out += ["", "**Defaulted values** (empty in Dataverse, schema default applied):", ""]
             out += [f"- `{d['column']}` = `{json.dumps(d['value'])}` on row `{d['record']}`" for d in m["defaulted"]]
+        rp = m.get("replay")
+        if rp:
+            out += [
+                "",
+                "### Replay: migrated claims through the migrated app",
+                "",
+                f"Each migrated claim was sent to `POST /claims/evaluate` with `asOf` = its `{rp['asOf']}` (the day the original app "
+                f"decided it), and the status that came back was compared with the status Dataverse stored. "
+                f"**{rp['result']}**: {rp['matched']}/{rp['compared']} match.",
+            ]
+            if rp["mismatched"]:
+                out += ["", "| Claim | Dataverse status | Migrated app | Errors |", "|---|---|---|---|"]
+                out += [f"| {x['id']} | {_cell(x['stored'])} | {_cell(x['migratedApp'])} | {_cell(', '.join(x['errors']) or '-')} |" for x in rp["mismatched"]]
+            for x in rp["noStoredStatus"]:
+                out.append(f"\n- Not compared: {x['id']} has no status in Dataverse (the migrated app says `{x['migratedApp']}`).")
 
     out += ["", "## Unsupported items", "", "| File | Ref | Construct | Reason |", "|---|---|---|---|"]
     for u in ev["unsupported"]:

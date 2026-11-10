@@ -273,13 +273,13 @@ export default function Verify({ run, onRule }: { run: RunData; onRule: (id: str
           />
           <Stat
             label="Data migration"
-            value={ev.migration ? ev.migration.result : "not run"}
+            value={ev.migration ? (ev.migration.replay && ev.migration.replay.result !== "PASS" ? ev.migration.replay.result : ev.migration.result) : "not run"}
             detail={
               ev.migration
-                ? `${ev.migration.counts.migrated} migrated · ${ev.migration.counts.quarantined} quarantined of ${ev.migration.counts.read} rows`
+                ? `${ev.migration.counts.migrated} migrated · ${ev.migration.counts.quarantined} quarantined${ev.migration.replay ? ` · replay ${ev.migration.replay.matched}/${ev.migration.replay.compared}` : ""}`
                 : `run: fluxora migrate ${run.runId}`
             }
-            tone={!ev.migration ? "muted" : ev.migration.result === "PASS" ? "good" : "bad"}
+            tone={!ev.migration ? "muted" : ev.migration.result === "PASS" && (!ev.migration.replay || ev.migration.replay.result === "PASS") ? "good" : "bad"}
           />
           <Stat
             label="Last judge pass (measured)"
@@ -353,6 +353,43 @@ function MigrationSection({ m, runId }: { m: Migration; runId: string }) {
               </tbody>
             </table>
           </div>
+        </>
+      )}
+      {m.replay && (
+        <>
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            <SubHeading>Replay through the migrated app</SubHeading>
+            <VerdictBadge status={m.replay.result} />
+            <span className="text-xs text-zinc-500">
+              {m.replay.matched}/{m.replay.compared} statuses match Dataverse · each claim evaluated as of its {m.replay.asOf}
+            </span>
+          </div>
+          {m.replay.mismatched.length > 0 && (
+            <table className="mt-2 w-full text-left text-[13px] leading-5">
+              <thead>
+                <tr className="border-b border-zinc-200">
+                  <th className={th}>Claim</th>
+                  <th className={th}>Dataverse</th>
+                  <th className={th}>Migrated app</th>
+                </tr>
+              </thead>
+              <tbody>
+                {m.replay.mismatched.map((x) => (
+                  <tr key={x.id} className="border-b border-zinc-100 bg-red-50/60 text-red-700 last:border-0">
+                    <td className="py-2 pr-4 font-mono text-xs">{x.id}</td>
+                    <td className="py-2 pr-4">{x.stored ?? "-"}</td>
+                    <td className="py-2 pr-4">{x.errors.length ? `errors ${x.errors.join(", ")}` : x.migratedApp ?? "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {m.replay.noStoredStatus.length > 0 && (
+            <p className="mt-2 text-xs text-zinc-500">
+              Not compared (no status stored in Dataverse):{" "}
+              {m.replay.noStoredStatus.map((x) => `${x.id} (migrated app: ${x.migratedApp ?? "-"})`).join(" · ")}
+            </p>
+          )}
         </>
       )}
       {m.defaulted.length > 0 && (

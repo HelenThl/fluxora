@@ -1,0 +1,40 @@
+{
+  "runId": "20261110-175816",
+  "seededDefect": {
+    "name": "threshold",
+    "ruleId": "R09",
+    "file": "Rules/R09.cs",
+    "before": "return (claimAmount ?? 0m) > 5000m;",
+    "after": "return (claimAmount ?? 0m) >= 5000m;",
+    "description": "Rule R09's comparison changed from > to >=, so a claim of exactly £5,000 goes to a manager."
+  },
+  "maxAttempts": 3,
+  "fixed": [
+    "R09"
+  ],
+  "unresolved": [],
+  "attempts": [
+    {
+      "attempt": 1,
+      "ruleId": "R09",
+      "at": "2026-11-10T17:58:22Z",
+      "mode": "replay",
+      "source": "llm-cache",
+      "provenance": {
+        "provider": "claude-code",
+        "model": "claude-code:claude-opus-5-5",
+        "servedBy": "Claude Opus 5.5 in a Claude Code session; written in chat from the prompt, no API call"
+      },
+      "diff": "--- a/Rules/R09.cs\n+++ b/Rules/R09.cs\n@@ -16,3 +16,3 @@\n     {\n-        return (claimAmount ?? 0m) >= 5000m;\n+        return (claimAmount ?? 0m) > 5000m;\n     }\n",
+      "build": "ok",
+      "judge": {
+        "result": "PASS",
+        "casesPassed": 32,
+        "casesTotal": 32,
+        "ruleStatus": "PASS",
+        "newFailures": []
+      },
+      "outcome": "fixed"
+    }
+  ]
+}

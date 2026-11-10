@@ -112,7 +112,7 @@ fluxora demo --offline
 fluxora demo
 ```
 
-It runs the whole pipeline in seven timed stages:
+It runs the whole pipeline in eight timed stages:
 
 1. **Transform: extract.** 11 rules and 2 unsupported items, in a new run under `runs/<run-id>/`.
 2. **Transform: approval gate.** This is auto-approved, and the demo says so loudly. Use
@@ -128,8 +128,12 @@ It runs the whole pipeline in seven timed stages:
    Reconciliation then reads the documents back: every row accounted for, unique ids, a field-by-field
    round trip, the money control total, counts by type and status, and the source file unchanged.
    `MIGRATION: PASS`, written to `migration.json`.
-5. **Verify on clean code.** VERDICT: PASS, 32/32 cases and 11/11 rules.
-6. **Verify with a seeded defect.** R09's `>` is changed to `>=` in a working copy, so a claim of
+5. **Verify: replay migrated data.** Every migrated claim is sent to the migrated API, evaluated as of
+   its reported date (the day the original app decided it), and the status that comes back is
+   compared with the status Dataverse stored. 32/32 match; the one claim with no stored status is
+   listed, not counted. `REPLAY: PASS`. Any mismatch is named per claim.
+6. **Verify on clean code.** VERDICT: PASS, 32/32 cases and 11/11 rules.
+7. **Verify with a seeded defect.** R09's `>` is changed to `>=` in a working copy, so a claim of
    exactly £5,000 wrongly goes to a manager. Parity Court goes red on that one case, and only R09 is
    blamed:
 
@@ -144,21 +148,26 @@ It runs the whole pipeline in seven timed stages:
      -> fixed  cases 32/32
    FINAL VERDICT: PASS
    ```
-7. **Evidence.** `runs/<run-id>/evidence.md` is written, including the migration report.
+8. **Evidence.** `runs/<run-id>/evidence.md` is written, including the migration and replay report.
 
 It ends with a table of measured wall-clock times. Each row says whether the LLM answered live, from
-the cache, or by replay. Here is one measured run, offline with the cached LLM on a Windows 11
-machine (2026-11-08). See [docs/measurements.md](docs/measurements.md) for six runs:
+the cache, or by replay. Here is the committed evidence run `runs/20261110-175816/`, offline with
+the cached LLM in a Linux cloud container (2026-11-10), from a fresh clone. It is the median of five
+runs; see [docs/measurements.md](docs/measurements.md) for all of them:
 
 | Stage | Seconds | Mode |
 |---|---|---|
-| Transform: extract | 0.05 | cached LLM (11 responses, no API calls) |
-| Transform: approval gate | 0.02 | auto-approved, no human |
-| Rebuild: generate | 0.09 | cached LLM (11 responses, no API calls) |
-| Verify: judge clean code | 8.59 | no LLM; includes the first .NET build of the run |
-| Verify: seeded defect + repair | 7.62 | repair: cached LLM (1 attempt) |
-| Evidence | 0.04 | no LLM |
-| **Total** | **16.42** | |
+| Transform: extract | 0.01 | cached LLM (11 responses, no API calls) |
+| Transform: approval gate | 0.00 | auto-approved, no human |
+| Rebuild: generate | 0.02 | cached LLM (11 responses, no API calls) |
+| Rebuild: migrate data | 0.00 | no LLM |
+| Verify: replay migrated data | 2.26 | no LLM; includes the run's first .NET build |
+| Verify: judge clean code | 2.04 | no LLM (no repair needed) |
+| Verify: seeded defect + repair | 3.68 | repair: cached LLM (1 attempt) |
+| Evidence | 0.00 | no LLM |
+| **Total** | **8.01** | |
+
+`0.00` means under 5 milliseconds. The first run in a fresh clone took 10.60s.
 
 Then look at the result:
 
@@ -166,8 +175,8 @@ Then look at the result:
 fluxora serve <run-id>         # http://127.0.0.1:8765/ (build the dashboard first)
 ```
 
-The exit code is 0 only if both the clean and the seeded Parity Court end green and the migration
-reconciles.
+The exit code is 0 only if both the clean and the seeded Parity Court end green, the migration
+reconciles and the replay matches.
 
 ## Commands, one stage at a time
 
@@ -177,7 +186,8 @@ fluxora approve <run-id> --all [--reject R05]     # human gate, timestamped deci
 fluxora generate <run-id> [--offline]             # Rebuild -> generated/
 fluxora judge <run-id>                            # Verify -> parity.json, repairs.json
 fluxora judge <run-id> --seed-defect threshold    # the red-to-green moment
-fluxora migrate <run-id>                          # Rebuild (data) -> migrated-claims.json, migration.json
+fluxora migrate <run-id> [--replay]               # Rebuild (data) -> migrated-claims.json, migration.json;
+                                                  #   --replay also checks them through the migrated API
 fluxora evidence <run-id>                         # -> runs/<run-id>/evidence.md
 fluxora serve [<run-id>]                          # dashboard on http://127.0.0.1:8765/
 fluxora doctor                                    # pre-flight checks before presenting
@@ -276,7 +286,7 @@ flow conditions. It is not a general Power Fx compiler.
 ## Tests and checks
 
 ```bash
-pytest                                       # 89 tests; the judge, repair, demo and doctor tests need the .NET SDK
+pytest                                       # 90 tests; the judge, repair, demo and doctor tests need the .NET SDK
 dotnet test generated/api/tests              # every reference case through the generated Evaluator
 python scripts/check_fixture.py              # fixture coverage and boundary values
 ```

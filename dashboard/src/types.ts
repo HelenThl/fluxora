@@ -150,6 +150,26 @@ export interface Migration {
   defaulted: { record: string; column: string; value: unknown }[];
   source: { path: string; table: string; entitySet: string; sha256Before: string; sha256After?: string };
   target: { store: string; document: string; id: string; partitionKey: string; file: string; sha256?: string };
+  replay: Replay | null;
+}
+
+export interface ReplayEntry {
+  id: string;
+  stored: string | null;
+  migratedApp: string | null;
+  errors: string[];
+  firedRules: string[];
+  detail?: string;
+}
+
+export interface Replay {
+  replayedAt: string;
+  asOf: string;
+  compared: number;
+  matched: number;
+  mismatched: ReplayEntry[];
+  noStoredStatus: ReplayEntry[];
+  result: string;
 }
 
 export interface Evidence {

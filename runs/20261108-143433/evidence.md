@@ -2,7 +2,7 @@
 
 **Transform. Rebuild. Verify.**
 
-Written 2026-11-10T15:40:44Z by `fluxora evidence 20261108-143433`, from `runs/20261108-143433/`.
+Written 2026-11-10T17:56:59Z by `fluxora evidence 20261108-143433`, from `runs/20261108-143433/`.
 
 ## Summary
 
@@ -11,6 +11,7 @@ Written 2026-11-10T15:40:44Z by `fluxora evidence 20261108-143433`, from `runs/2
 - **Verify:** Parity Court **PASS**: 32/32 cases and 11/11 rules. Seeded defect `threshold` in R09 made the first verdict FAIL (31/32 cases; red: R09).
 - **Repair:** 1 attempt(s); fixed R09; unresolved -.
 - **Data migration:** **PASS**: 40 Dataverse rows read, 33 migrated to Cosmos DB documents, 7 quarantined with a reason; 7/7 reconciliation checks pass.
+- **Replay:** **PASS**: 32/32 migrated claims get the same status from the migrated app as Dataverse stored (each evaluated as of its reportedDate); 1 had no stored status to compare.
 - **Tamper guard:** reference cases unchanged (sha256 `b275b239cd3e316d`).
 
 ## Rule register
@@ -80,7 +81,7 @@ Build ok; judge PASS (32/32 cases).
 | Control total: claimAmount | PASS | source £73,488.28, documents £73,488.28 |
 | Counts by claimType | PASS | Home 11, Motor 11, Travel 11 |
 | Counts by status | PASS | (blank) 1, Approved 14, Below excess 4, Manual review 10, Not covered 2, Pending approval 2 |
-| Source unchanged | PASS | sha256 95990701845c |
+| Source unchanged | PASS | sha256 d582deb22bdf |
 
 **Quarantined rows** (not migrated; a person must fix or decide):
 
@@ -97,6 +98,12 @@ Build ok; judge PASS (32/32 cases).
 **Defaulted values** (empty in Dataverse, schema default applied):
 
 - `fx_hasreceipt` = `false` on row `2cb36fb5-390b-4163-ba8d-e06fd001b115`
+
+### Replay: migrated claims through the migrated app
+
+Each migrated claim was sent to `POST /claims/evaluate` with `asOf` = its `reportedDate` (the day the original app decided it), and the status that came back was compared with the status Dataverse stored. **PASS**: 32/32 match.
+
+- Not compared: CLM-900037 has no status in Dataverse (the migrated app says `Approved`).
 
 ## Unsupported items
 
@@ -123,3 +130,4 @@ Last judge pass: build 4.2s, API start 1.2s, cases 0.62s.
 - C# rule bodies were written in a Claude Code session from the generator's prompts, not by a live API call.
 - Repair attempt 1 for R09 was a replay (llm-cache), not a live LLM call.
 - The 40 Dataverse rows migrated to Cosmos DB documents are synthetic; 7 carry planted data-quality problems and were quarantined, not dropped.
+- Replay statuses are compared with what the synthetic Dataverse rows store. Those stored statuses were produced by the fixture's own script, not by a run of the original Power App.

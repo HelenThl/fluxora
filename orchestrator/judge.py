@@ -13,6 +13,7 @@ import json
 import socket
 import subprocess
 import time
+from contextlib import contextmanager
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -152,6 +153,45 @@ def write_parity(verdict: Verdict, path: Path) -> None:
 
 
 # --- the API process ------------------------------------------------------------------------------
+
+
+@contextmanager
+def running_api(api_dir: Path, *, port: int, work_dir: Path, log=print):
+    """Build and start the migrated API, yield its URL, and always stop it."""
+    log(f"  build: dotnet build {api_dir.as_posix()}")
+    dll = _build(Path(api_dir).resolve())
+    if port_in_use(port):
+        raise JudgeError(port_in_use_message(port))
+    url = f"http://127.0.0.1:{port}"
+    work_dir.mkdir(parents=True, exist_ok=True)
+    log_path = work_dir / "api.log"
+    with open(log_path, "wb") as api_log:
+        try:
+            process = subprocess.Popen(
+                ["dotnet", str(dll), "--urls", url], cwd=dll.parent, stdout=api_log, stderr=subprocess.STDOUT
+            )
+        except FileNotFoundError:
+            raise JudgeError(NO_DOTNET) from None
+        try:
+            _wait_until_healthy(url, process, log_path)
+            yield url
+        finally:
+            _stop(process)
+
+
+def post_claim(url: str, body: dict) -> dict:
+    """POST one claim to /claims/evaluate. Money comes back as Decimal."""
+    request = urllib.request.Request(
+        f"{url}/claims/evaluate",
+        data=json.dumps(body, default=float).encode("utf-8"),  # 2-decimal money survives float
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            return json.loads(response.read().decode("utf-8"), parse_float=Decimal)
+    except urllib.error.HTTPError as e:
+        return {"httpStatus": e.code, "body": e.read(500).decode("utf-8", "replace")}
 
 
 def _build(api_dir: Path) -> Path:

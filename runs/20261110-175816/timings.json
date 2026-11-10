@@ -1,0 +1,49 @@
+{
+  "stages": [
+    {
+      "stage": "Transform: extract",
+      "seconds": 0.01252877899997884,
+      "mode": "cached LLM (11 responses, no API calls)"
+    },
+    {
+      "stage": "Transform: approval gate",
+      "seconds": 0.00039269499995953083,
+      "mode": "auto-approved, no human (use --pause to approve in the dashboard)"
+    },
+    {
+      "stage": "Rebuild: generate",
+      "seconds": 0.019491584000036255,
+      "mode": "cached LLM (11 responses, no API calls)"
+    },
+    {
+      "stage": "Rebuild: migrate data",
+      "seconds": 0.0017159380000180136,
+      "mode": "no LLM"
+    },
+    {
+      "stage": "Verify: replay migrated data",
+      "seconds": 2.257384768999998,
+      "mode": "no LLM"
+    },
+    {
+      "stage": "Verify: judge clean code",
+      "seconds": 2.0393218450000177,
+      "mode": "no LLM (no repair needed)"
+    },
+    {
+      "stage": "Verify: seeded defect + repair",
+      "seconds": 3.6823003399999834,
+      "mode": "repair: cached LLM (1 attempt(s))"
+    },
+    {
+      "stage": "Evidence: write evidence.md",
+      "seconds": 0.001014243999975406,
+      "mode": "no LLM"
+    },
+    {
+      "stage": "Total",
+      "seconds": 8.014328704999969,
+      "mode": ""
+    }
+  ]
+}
